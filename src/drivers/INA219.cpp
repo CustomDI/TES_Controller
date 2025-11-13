@@ -16,13 +16,7 @@ INA219::INA219(uint8_t i2cAddress, Router* router, I2CRoute* route)
 
 void INA219::begin() {
     Wire.begin();
-    // Default configuration: 32V bus, 320mV shunt, 12-bit resolution, continuous conversion
-    // writeRegister(INA219_REG_CONFIG,
-    //               INA219_CONFIG_BVOLTAGERANGE_32V |
-    //               INA219_CONFIG_GAIN_8_320MV |
-    //               INA219_CONFIG_BADCRES_12BIT |
-    //               INA219_CONFIG_SADCRES_12BIT_128S |
-    //               INA219_CONFIG_MODE_SANDBVOLT_CONTINUOUS);
+    calibrate(INA219_RSHUNT, INA219_MAX_EXPECTED_CURRENT); // Default calibration: 10 ohm shunt, 32mA max current
 }
 
 void INA219::calibrate(float shuntResistance, float maxCurrent) {
@@ -38,7 +32,7 @@ void INA219::calibrate(float shuntResistance, float maxCurrent) {
     writeRegister(INA219_REG_CALIBRATION, calValue);
 
     // These values are used for converting raw register values to meaningful units
-    _currentDivider_mA = 1000.0 / (calValue * 0.00001); // Current LSB in mA
+    _currentDivider_mA = 1 / (current_LSB * 1000.0) ; // Current LSB in mA
     _powerMultiplier_mW = 20.0 * _currentDivider_mA; // Power LSB in mW (Power LSB = 20 * Current LSB)
 }
 
@@ -99,4 +93,21 @@ uint16_t INA219::readRegister(uint8_t reg) {
         _router->endRoute(_route);
     }
     return value;
+}
+
+void INA219::printRoute() {
+    if (_router != nullptr && _route != nullptr) {
+        Serial.print("INA219 Route: ");
+        I2CRoute* current = _route;
+        while (current != nullptr) {
+            if (current->hub != nullptr) {
+                Serial.print(" -> 0x");
+                Serial.print(current->hub->get_i2cAddress(), HEX);
+            }
+            current = current->next;
+        }
+        Serial.println();
+    } else {
+        Serial.println("INA219: No routing information available.");
+    }
 }

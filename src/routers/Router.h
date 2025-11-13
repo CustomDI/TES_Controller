@@ -18,7 +18,6 @@ public:
     void endRoute(I2CRoute* route);
     void scanDevicesAtEndpoint(I2CRoute* route); // New method to scan devices at the endpoint of a route
     LTC4302* get_baseHub() { return _baseHub; }
-
 private:
     LTC4302* _baseHub;
 };

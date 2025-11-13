@@ -4,6 +4,7 @@ LTC4302::LTC4302(uint8_t i2cAddress) : _i2cAddress(i2cAddress) {}
 
 void LTC4302::begin() {
     Wire.begin();
+    disableBus(); // Start with bus disabled
 }
 
 uint8_t LTC4302::readRegister(uint8_t reg) {
@@ -39,10 +40,10 @@ void LTC4302::setGPIO(uint8_t gpioPin, bool state) {
     uint8_t bit = (gpioPin == 1) ? (1 << 5) : (1 << 6);
     uint8_t regValue = readRegister(0x01);
     if (state) {
-        Serial.println("LTC4302: Setting GPIO" + String(gpioPin) + " HIGH on address 0x" + String(_i2cAddress, HEX));
+        // Serial.println("LTC4302: Setting GPIO" + String(gpioPin) + " HIGH on address 0x" + String(_i2cAddress, HEX));
         regValue |= bit;
     } else {
-        Serial.println("LTC4302: Setting GPIO" + String(gpioPin) + " LOW on address 0x" + String(_i2cAddress, HEX));
+        // Serial.println("LTC4302: Setting GPIO" + String(gpioPin) + " LOW on address 0x" + String(_i2cAddress, HEX));
         regValue &= ~bit;
     }
     writeRegister(regValue);
@@ -53,7 +54,7 @@ void LTC4302::enableBus() {
     // This needs to be confirmed with the LTC4302 datasheet.
     // For now, let's assume register 0x01 controls the bus enable,
     // and setting bit 0 enables it.
-    Serial.println("LTC4302: Enabling bus on address 0x" + String(_i2cAddress, HEX));
+    // Serial.println("LTC4302: Enabling bus on address 0x" + String(_i2cAddress, HEX));
     uint8_t regValue = readRegister(0x01);
     writeRegister(regValue | 1 << 7); // Set bit 7
 }
@@ -63,7 +64,7 @@ void LTC4302::disableBus() {
     // This needs to be confirmed with the LTC4302 datasheet.
     // For now, let's assume register 0x01 controls the bus enable,
     // and clearing bit 0 disables it.
-    Serial.println("LTC4302: Disabling bus on address 0x" + String(_i2cAddress, HEX));
+    // Serial.println("LTC4302: Disabling bus on address 0x" + String(_i2cAddress, HEX));
     uint8_t regValue = readRegister(0x01);
     writeRegister(regValue & ~(1 << 7)); // Clear bit 7
 }

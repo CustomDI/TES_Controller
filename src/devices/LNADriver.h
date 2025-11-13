@@ -5,8 +5,16 @@
 #include "../routers/Router.h"
 #include "../drivers/MCP4728.h"
 #include "../drivers/INA219.h"
-#include "../drivers/LTC4302.h" // Include LTC4302 for the internal instance
+#include "../drivers/LTC4302.h"
 
+// Define I2C addresses for devices behind the LNA LTC4302
+#define LNA_MCP4728_ADDR      0x60 // Address for MCP4728 behind LNA driver
+#define LNA_INA_DRAIN_ADDR    0x40 // Address for INA219_1 behind LNA driver
+#define LNA_INA_GATE_ADDR     0x41 // Address for INA219_2 behind LNA driver
+
+// MCP4728 channels for LNA functions
+#define LNA_DRAIN_CHANNEL MCP4728_CHANNEL_A
+#define LNA_GATE_CHANNEL  MCP4728_CHANNEL_B
 class LNADriver {
 public:
     LNADriver(LTC4302* lnaLtc4302, Router* router); // Removed baseHubChannel
@@ -14,20 +22,23 @@ public:
     I2CRoute getRouteToLnaLtc4302() { return _routeToLnaLtc4302; } // Accessor for the route
 
     // // Methods to interact with the LNA's MCP4728
-    void writeLnaDac(uint8_t channel, uint16_t value, bool fastMode = false); // Channel still needed for MCP4728
-    void writeAllLnaDacs(uint16_t valueA, uint16_t valueB, uint16_t valueC, uint16_t valueD, bool fastMode = false);
-    void writeLnaDacWithPowerDown(uint8_t channel, uint16_t value, uint8_t powerDownMode); // Channel still needed for MCP4728
+    void writeDrain(uint16_t value);
+    void writeGaate(uint16_t value);
 
     // Methods to interact with the LNA's INA219s
-    float getIna1ShuntVoltage_mV();
-    float getIna1BusVoltage_V();
-    float getIna1Current_mA();
-    float getIna1Power_mW();
+    float getDrainShuntVoltage_mV();
+    float getDrainBusVoltage_V();
+    float getDrainCurrent_mA();
+    float getDrainPower_mW();
 
-    float getIna2ShuntVoltage_mV();
-    float getIna2BusVoltage_V();
-    float getIna2Current_mA();
-    float getIna2Power_mW();
+    float getGateShuntVoltage_mV();
+    float getGateBusVoltage_V();
+    float getGateCurrent_mA();
+    float getGatePower_mW();
+
+    // Methods to control GPIOs on the LNA LTC4302
+    void setDrainEnable(bool state);
+    void setGateEnable(bool state);
 
 private:
     LTC4302* _lnaLtc4302; // Pointer to the LNA's LTC4302 instance
@@ -38,8 +49,8 @@ private:
     // The following routes are no longer needed as the LTC4302 does not have channels
 
     MCP4728 _lnaDac;
-    INA219 _lnaIna1;
-    INA219 _lnaIna2;
+    INA219 _lnaInaDrain;
+    INA219 _lnaInaGate;
 };
 
 #endif // LNA_DRIVER_H

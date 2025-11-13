@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include <Adafruit_MCP4728.h>
 #include "../routers/Router.h"
 
 class MCP4728 {
@@ -16,19 +17,15 @@ public:
     void begin();
 
     // Write to a specific DAC channel (A, B, C, D)
-    void writeDAC(uint8_t channel, uint16_t value, bool fastMode = false);
-
-    // Write to all DAC channels simultaneously
-    void writeAllDACs(uint16_t valueA, uint16_t valueB, uint16_t valueC, uint16_t valueD, bool fastMode = false);
-
-    // Write to a specific DAC channel with power-down mode
-    void writeDACWithPowerDown(uint8_t channel, uint16_t value, uint8_t powerDownMode);
+    bool writeDAC(MCP4728_channel_t channel, uint16_t value);
+    // Read the current value of a specific DAC channel (A, B, C, D)
+    uint16_t readDAC(MCP4728_channel_t channel);
 
 private:
     uint8_t _i2cAddress; // Current I2C address of the device
     Router* _router; // Pointer to the router instance
     I2CRoute* _route; // Pointer to the specific route for this device
-    void sendCommand(uint8_t cmd, uint16_t data);
+    Adafruit_MCP4728 mcp;
 };
 
 #endif // MCP4728_H
