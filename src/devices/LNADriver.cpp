@@ -35,7 +35,7 @@ void LNADriver::begin() {
 void LNADriver::writeDrain(uint16_t value) {
     _lnaDac.writeDAC(LNA_DRAIN_CHANNEL, value); // Channel A controls Drain
 }
-void LNADriver::writeGaate(uint16_t value) {
+void LNADriver::writeGate(uint16_t value) {
     _lnaDac.writeDAC(LNA_GATE_CHANNEL, value); // Channel B controls Gate
 }
 

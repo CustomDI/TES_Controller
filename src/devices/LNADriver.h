@@ -23,7 +23,7 @@ public:
 
     // // Methods to interact with the LNA's MCP4728
     void writeDrain(uint16_t value);
-    void writeGaate(uint16_t value);
+    void writeGate(uint16_t value);
 
     // Methods to interact with the LNA's INA219s
     float getDrainShuntVoltage_mV();
