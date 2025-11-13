@@ -16,8 +16,8 @@ void TCA642ARGJR::begin() {
     uint8_t config[3] = {0x00, 0x00, 0x00};
     writeRegisters(TCA642ARGJR_CONFIG_PORT0, config, 3);
 
-    // uint8_t outputs[3] = {0x00, 0x00, 0x00};
-    // writeRegisters(TCA642ARGJR_OUTPUT_PORT0, outputs, 3);
+    uint8_t outputs[3] = {0xFF, 0xFF, 0xFF};
+    writeRegisters(TCA642ARGJR_OUTPUT_PORT0, outputs, 3);
 }
 
 void TCA642ARGJR::setOutputPin(uint8_t pin, bool state) {

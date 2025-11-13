@@ -8,6 +8,8 @@ MCP4728::MCP4728(uint8_t i2cAddress, Router* router, I2CRoute* route)
 void MCP4728::begin() {
     Wire.begin();
     mcp.begin(_i2cAddress);
+    mcp.setChannelValue(MCP4728_CHANNEL_A, 0);
+    mcp.setChannelValue(MCP4728_CHANNEL_B, 0);
 }
 
 bool MCP4728::writeDAC(MCP4728_channel_t channel, uint16_t value) {

@@ -81,6 +81,8 @@ void cmdTESBus(SerialCommands& sender, Args& args);
 void cmdTESCurrent(SerialCommands& sender, Args& args);
 void cmdTESPower(SerialCommands& sender, Args& args);
 
+void cmdHelp(SerialCommands& sender, Args& args);
+
 Command lnaCommands[] = {
     COMMAND(cmdLNASet, "SET", dacValueArg, nullptr, "Set Gate/Drain DAC Value"),
     COMMAND(cmdLNAEnable, "ENABLE", enableArg, nullptr, "Enable/Disable Gate/Drain"),
@@ -103,6 +105,7 @@ Command commands[] = {
     COMMAND(cmdLNA, "LNA", lnaChanArg, lnaDrainGate, lnaCommands, "LNA Commands"),
     COMMAND(cmdTES, "TES", tesChanArg, tesCommands, "TES Commands"),
     COMMAND(cmdDAC, "DAC", dacValueArg, nullptr, "Set Main DAC Value"),
+    COMMAND(cmdHelp, "HELP", nullptr, "List All Commands"),
 };
 
 SerialCommands serialCommands(Serial, commands, sizeof(commands) / sizeof(Command));
@@ -155,6 +158,10 @@ void setup() {
 
 void loop() {
     serialCommands.readSerial();
+}
+
+void cmdHelp(SerialCommands& sender, Args& args) {
+    sender.listAllCommands(commands, sizeof(commands) / sizeof(Command));
 }
 
 void cmdLNA(SerialCommands& sender, Args& args) {

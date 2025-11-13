@@ -5,6 +5,8 @@ LTC4302::LTC4302(uint8_t i2cAddress) : _i2cAddress(i2cAddress) {}
 void LTC4302::begin() {
     Wire.begin();
     disableBus(); // Start with bus disabled
+    setGPIO(1, true); // Set GPIO1 HIGH
+    setGPIO(2, true); // Set GPIO2 HIGH
 }
 
 uint8_t LTC4302::readRegister(uint8_t reg) {
