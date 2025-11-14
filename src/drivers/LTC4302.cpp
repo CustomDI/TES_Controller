@@ -51,6 +51,18 @@ void LTC4302::setGPIO(uint8_t gpioPin, bool state) {
     writeRegister(regValue);
 }
 
+void LTC4302::getGPIO(uint8_t gpioPin, bool& state) {
+    // GPIO1 -> bit 5, GPIO2 -> bit 6 in register 0x01
+    if (gpioPin < 1 || gpioPin > 2) {
+        Serial.println("LTC4302: Invalid GPIO pin (use 1 or 2)");
+        state = false;
+        return;
+    }
+    uint8_t bit = (gpioPin == 1) ? (1 << 5) : (1 << 6);
+    uint8_t regValue = readRegister(0x01);
+    state = (regValue & bit) != 0;
+}
+
 void LTC4302::enableBus() {
     // Assuming a specific register and bit for enabling the bus.
     // This needs to be confirmed with the LTC4302 datasheet.

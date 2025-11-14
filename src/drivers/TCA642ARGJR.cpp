@@ -109,16 +109,15 @@ void TCA642ARGJR::readRegisters(uint8_t startReg, uint8_t* data, size_t length) 
     if (_router != nullptr && _route != nullptr) {
         _router->routeTo(_route);
     }
-    Wire.beginTransmission(_address);
-    Wire.write(startReg);
-    Wire.endTransmission();
-    uint8_t got = Wire.requestFrom(_address, (uint8_t)length);
     size_t i = 0;
-    while (Wire.available() && i < length) {
-        data[i++] = Wire.read();
+
+    for (i; i < length; ) {
+        Wire.beginTransmission(_address);
+        Wire.write(startReg + i);
+        Wire.endTransmission();
+        Wire.requestFrom(_address, (uint8_t)1);
+        if (Wire.available()) data[i++] = Wire.read();
     }
-    // zero-fill if fewer bytes
-    for (; i < length; ++i) data[i] = 0;
     // Diagnostic print for read status
 
     if (_router != nullptr && _route != nullptr) {

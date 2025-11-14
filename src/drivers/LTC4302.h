@@ -13,6 +13,7 @@ public:
     void writeRegister(uint8_t value);
     void enableBus();
     void setGPIO(uint8_t gpioPin, bool state);
+    void getGPIO(uint8_t gpioPin, bool& state);
     void disableBus();
     uint8_t get_i2cAddress() { return _i2cAddress; }
 

@@ -22,6 +22,7 @@ public:
     INA219(uint8_t i2cAddress, Router* router, I2CRoute* route);
 
     void begin();
+    void begin(float shuntResistance, float maxCurrent);
     void calibrate(float shuntResistance, float maxCurrent); // shuntResistance in ohms, maxCurrent in Amps
 
     float getShuntVoltage_mV();

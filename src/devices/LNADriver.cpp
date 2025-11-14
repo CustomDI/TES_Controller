@@ -24,11 +24,8 @@ LNADriver::LNADriver(LTC4302* lnaLtc4302, Router* router)
 void LNADriver::begin() {
     _lnaLtc4302->begin(); // Call begin on the pointer
     _lnaDac.begin();
-    _lnaInaDrain.begin();
-    _lnaInaGate.begin();
-    // // Calibrate INA219s (example values, adjust as needed)
-    // _lnaIna1.calibrate(0.1, 1.0); // 0.1 Ohm shunt, max 1.0 Amp
-    // _lnaIna2.calibrate(0.1, 1.0); // 0.1 Ohm shunt, max 1.0 Amp
+    _lnaInaDrain.begin(LNA_INA_SHUNT_RESISTANCE_OHMS, LNA_INA_MAX_EXPECTED_CURRENT_AMPS);
+    _lnaInaGate.begin(LNA_INA_SHUNT_RESISTANCE_OHMS, LNA_INA_MAX_EXPECTED_CURRENT_AMPS);
 }
 
 // Methods to interact with the LNA's MCP4728
@@ -37,6 +34,14 @@ void LNADriver::writeDrain(uint16_t value) {
 }
 void LNADriver::writeGate(uint16_t value) {
     _lnaDac.writeDAC(LNA_GATE_CHANNEL, value); // Channel B controls Gate
+}
+
+uint16_t LNADriver::readDrain() {
+    return _lnaDac.readDAC(LNA_DRAIN_CHANNEL);
+}
+
+uint16_t LNADriver::readGate() {
+    return _lnaDac.readDAC(LNA_GATE_CHANNEL);
 }
 
 float LNADriver::getDrainShuntVoltage_mV() {
@@ -78,9 +83,26 @@ void LNADriver::setGateEnable(bool state) { // False is enable, true is disable
     _router->endRoute(&_routeToLnaLtc4302); // End routing after operation
 }
 
-void LNADriver::setDrainEnable(bool state) {
-    state = !state; // Invert state for LTC4302 GPIO logic
+bool LNADriver::getDrainEnable() { 
+    bool state;
     _router->routeTo(&_routeToLnaLtc4302); // This will route to the TES LTC4302
-    _lnaLtc4302->setGPIO(2, state);
+    _lnaLtc4302->getGPIO(2, state);
     _router->endRoute(&_routeToLnaLtc4302); // End routing after operation
-}
+    return !state; // Invert logic for return value
+ }
+
+ bool LNADriver::getGateEnable() {
+    bool state;
+    _router->routeTo(&_routeToLnaLtc4302); // This will route to the TES LTC4302
+    _lnaLtc4302->getGPIO(1, state);
+    _router->endRoute(&_routeToLnaLtc4302); // End routing after operation
+    return !state; // Invert logic for return value
+ }
+
+ void LNADriver::setDrainEnable(bool state) {
+     state = !state;  // Invert state for LTC4302 GPIO logic
+     _router->routeTo(
+         &_routeToLnaLtc4302);  // This will route to the TES LTC4302
+     _lnaLtc4302->setGPIO(2, state);
+     _router->endRoute(&_routeToLnaLtc4302);  // End routing after operation
+ }

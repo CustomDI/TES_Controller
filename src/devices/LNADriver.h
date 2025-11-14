@@ -11,6 +11,8 @@
 #define LNA_MCP4728_ADDR      0x60 // Address for MCP4728 behind LNA driver
 #define LNA_INA_DRAIN_ADDR    0x40 // Address for INA219_1 behind LNA driver
 #define LNA_INA_GATE_ADDR     0x41 // Address for INA219_2 behind LNA driver
+#define LNA_INA_SHUNT_RESISTANCE_OHMS 0.1f // Shunt resistance for INA219s
+#define LNA_INA_MAX_EXPECTED_CURRENT_AMPS .32f // Max expected current for INA219s
 
 // MCP4728 channels for LNA functions
 #define LNA_DRAIN_CHANNEL MCP4728_CHANNEL_A
@@ -24,6 +26,8 @@ public:
     // // Methods to interact with the LNA's MCP4728
     void writeDrain(uint16_t value);
     void writeGate(uint16_t value);
+    uint16_t readDrain();
+    uint16_t readGate();
 
     // Methods to interact with the LNA's INA219s
     float getDrainShuntVoltage_mV();
@@ -39,6 +43,8 @@ public:
     // Methods to control GPIOs on the LNA LTC4302
     void setDrainEnable(bool state);
     void setGateEnable(bool state);
+    bool getDrainEnable();
+    bool getGateEnable();
 
 private:
     LTC4302* _lnaLtc4302; // Pointer to the LNA's LTC4302 instance

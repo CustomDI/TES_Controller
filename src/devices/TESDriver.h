@@ -19,18 +19,25 @@ public:
 
     // GPIO functionality at LTC4302
     void setOutEnable(bool state);
+    bool getOutEnable();
 
     // INA functionality
     float getShuntVoltage_mV();
     float getBusVoltage_V();
     float getCurrent_mA();
     float getPower_mW();
+    // Drive current to a target (0..20 mA). This will adjust the 24-bit
+    // output register via `setAllOutputPins` until `getCurrent_mA()` reads
+    // within the provided tolerance. Returns true on success.
+    bool setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr,
+                       float tolerance_mA = 0.005f, int maxIter = 24, bool increasing = false, int delayMs = 10);
 
     // TCA functionality
     void setOutputPin(uint8_t pin, bool state);
     bool getOutputPin(uint8_t pin);
     void setAllOutputPins(uint32_t state); // now 24-bit capable
     uint32_t getAllOutputPins();
+    void bumpOutputPins(int8_t delta); // Adjust output pins by delta (signed)
     // Diagnostic: read raw output registers (3 bytes)
     void readOutputRegisters(uint8_t out[3]);
 

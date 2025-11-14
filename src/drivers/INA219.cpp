@@ -19,6 +19,11 @@ void INA219::begin() {
     calibrate(INA219_RSHUNT, INA219_MAX_EXPECTED_CURRENT); // Default calibration: 10 ohm shunt, 32mA max current
 }
 
+void INA219::begin(float shuntResistance, float maxCurrent) {
+    Wire.begin();
+    calibrate(shuntResistance, maxCurrent); // Default calibration: 10 ohm shunt, 32mA max current
+}
+
 void INA219::calibrate(float shuntResistance, float maxCurrent) {
     // Calculate calibration register value
     // Calibration value = trunc (0.04096 / (Current_LSB * R_Shunt))

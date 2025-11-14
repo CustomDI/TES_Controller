@@ -56,26 +56,40 @@ constexpr auto lnaDrainGate =
 constexpr auto dacValueArg =
     ARG(ArgType::Int, 0, 4095, "VALUE");
 
-constexpr auto enableArg =
-    ARG(ArgType::Int, 0, 1, "ENABLE"); 
-
 constexpr auto tesTCAArg = 
-    ARG(ArgType::Int, 0, 0xFFFFFF, "BITS");
+    ARG(ArgType::Int, 0, 0xFFFFF, "BITS"); // 20 bits for TES TCA
+
+constexpr auto tesTCAHexArg = 
+    ARG(ArgType::String, "HEXSTRING"); // Hex string for TES TCA
+
+constexpr auto tcaCurrentArg = 
+    ARG(ArgType::Float, 0, 20, "CURRENT");
+
+
 
 void cmdLNA(SerialCommands& sender, Args& args);
 void cmdTES(SerialCommands& sender, Args& args);
 
 void cmdDAC(SerialCommands& sender, Args& args);
 
+void cmdLNAGetAll(SerialCommands& sender, Args& args);
 void cmdLNASet(SerialCommands& sender, Args& args);
 void cmdLNAShunt(SerialCommands& sender, Args& args);
 void cmdLNABus(SerialCommands& sender, Args& args);
 void cmdLNACurrent(SerialCommands& sender, Args& args);
 void cmdLNAPower(SerialCommands& sender, Args& args);
 void cmdLNAEnable(SerialCommands& sender, Args& args);
+void cmdLNADisable(SerialCommands& sender, Args& args);
 
+void cmdTESGetAll(SerialCommands& sender, Args& args);
 void cmdTESSet(SerialCommands& sender, Args& args);
+void cmdTESSetInt(SerialCommands& sender, Args& args);
+void cmdTESSetHex(SerialCommands& sender, Args& args);
+void cmdTESBits(SerialCommands& sender, Args& args);
 void cmdTESEnable(SerialCommands& sender, Args& args);
+void cmdTESDisable(SerialCommands& sender, Args& args);
+void cmdTESInc(SerialCommands& sender, Args& args);
+void cmdTESDec(SerialCommands& sender, Args& args);
 void cmdTESShunt(SerialCommands& sender, Args& args);
 void cmdTESBus(SerialCommands& sender, Args& args);
 void cmdTESCurrent(SerialCommands& sender, Args& args);
@@ -84,8 +98,10 @@ void cmdTESPower(SerialCommands& sender, Args& args);
 void cmdHelp(SerialCommands& sender, Args& args);
 
 Command lnaCommands[] = {
+    COMMAND(cmdLNAGetAll, "GET", nullptr, "Get All LNA Parameters for Gate/Drain"),
+    COMMAND(cmdLNAEnable, "ENABLE", nullptr, "Enable Gate/Drain"),
+    COMMAND(cmdLNADisable, "DISABLE", nullptr, "Disable Gate/Drain"),
     COMMAND(cmdLNASet, "SET", dacValueArg, nullptr, "Set Gate/Drain DAC Value"),
-    COMMAND(cmdLNAEnable, "ENABLE", enableArg, nullptr, "Enable/Disable Gate/Drain"),
     COMMAND(cmdLNAShunt, "SHUNT", nullptr, "Get Gate/Drain Shunt Voltage (mV)"),
     COMMAND(cmdLNABus, "BUS", nullptr, "Get Gate/Drain Bus Voltage (V)"),
     COMMAND(cmdLNACurrent, "CURRENT", nullptr, "Get Gate/Drain Current (mA)"),
@@ -93,8 +109,15 @@ Command lnaCommands[] = {
 };
 
 Command tesCommands[] = {
-    COMMAND(cmdTESSet, "SET", tesTCAArg, nullptr, "Set TES TCA Output Bits"),
-    COMMAND(cmdTESEnable, "ENABLE", enableArg, nullptr, "Enable/Disable TES Outputs"),
+    COMMAND(cmdTESGetAll, "GET", nullptr, "Get All TES Parameters"),
+    COMMAND(cmdTESEnable, "ENABLE", nullptr, "Enable TES Outputs"),
+    COMMAND(cmdTESDisable, "DISABLE", nullptr, "Disable TES Outputs"),
+    COMMAND(cmdTESSet, "SET", tcaCurrentArg, nullptr, "Search and set TES Output Current (mA)"),
+    COMMAND(cmdTESSetInt, "SETINT", tesTCAArg, nullptr, "Set TES TCA Output Bits (Integer)"),
+    COMMAND(cmdTESSetHex, "SETHEX", tesTCAHexArg, nullptr, "Set TES TCA Output Bits (Hex)"),
+    COMMAND(cmdTESBits, "BIT", nullptr, "Get TES TCA Output Bits (Hex)"),
+    COMMAND(cmdTESInc, "INC", tesTCAArg, nullptr, "Increase TES TCA Output Bits (Integer)"),
+    COMMAND(cmdTESDec, "DEC", tesTCAArg, nullptr, "Decrease TES TCA Output Bits (Integer)"),
     COMMAND(cmdTESShunt, "SHUNT", nullptr, "Get TES Shunt Voltage (mV)"),
     COMMAND(cmdTESBus, "BUS", nullptr, "Get TES Bus Voltage (V)"),
     COMMAND(cmdTESCurrent, "CURRENT", nullptr, "Get TES Current (mA)"),
@@ -128,18 +151,24 @@ void initDeviceArrays() {
     }
 }
 
+// Helper to print out 0 padded hex values
+String toPaddedHex(uint32_t value, uint8_t width) {
+    String hexStr = String(value, HEX);
+    while (hexStr.length() < width) {
+        hexStr = "0" + hexStr;
+    }
+    hexStr.toUpperCase();
+    return hexStr;
+}
+
 void setup() {
     Serial.begin(115200);
     Serial.println("TES Controller Starting...");
 
     initDeviceArrays();
-    // Check if the main MCP4728 is at the default address 0x60
-    // This check needs to be routed through the baseHub if the MCP4728 is behind it.
-    // For now, assuming direct access for the check, or that routing is handled internally by Wire.
-    // For simplicity, we'll assume the router is already set up and can handle the check.
     baseHub.begin();
-    router.begin(); // Initialize the router (which initializes the base hub)
-    // Enable the I2C bus through the base hub LTC4302
+    router.begin();
+
     baseHub.enableBus();
     mainDac.begin();
 
@@ -292,7 +321,7 @@ void cmdLNAPower(SerialCommands& sender, Args& args) {
 void cmdLNAEnable(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
-    bool enable = args[2].getInt() != 0;
+    bool enable = true;
     if (strcmp(target, "DRAIN") == 0) {
         lnaDriver[channel]->setDrainEnable(enable);
         sender.getSerial().print("LNA Channel ");
@@ -312,19 +341,93 @@ void cmdLNAEnable(SerialCommands& sender, Args& args) {
     }
 }
 
-void cmdTESSet(SerialCommands& sender, Args& args) {
+void cmdLNADisable(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* target = args[1].getString();
+    bool enable = false;
+    if (strcmp(target, "DRAIN") == 0) {
+        lnaDriver[channel]->setDrainEnable(enable);
+        sender.getSerial().print("LNA Channel ");
+        sender.getSerial().print(channel + 1);
+        sender.getSerial().print(" DRAIN ");
+        sender.getSerial().print(enable ? "Enabled" : "Disabled");
+        sender.getSerial().println();
+    } else if (strcmp(target, "GATE") == 0) {
+        lnaDriver[channel]->setGateEnable(enable);
+        sender.getSerial().print("LNA Channel ");
+        sender.getSerial().print(channel + 1);
+        sender.getSerial().print(" GATE ");
+        sender.getSerial().print(enable ? "Enabled" : "Disabled");
+        sender.getSerial().println();
+    } else {
+        sender.getSerial().println("Error: Invalid target. Use DRAIN or GATE.");
+    }
+}
+
+void cmdTESGetAll(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float shuntVoltage = tesDriver[channel]->getShuntVoltage_mV();
+    float busVoltage = tesDriver[channel]->getBusVoltage_V();
+    float current = tesDriver[channel]->getCurrent_mA();
+    float power = tesDriver[channel]->getPower_mW();
+    uint32_t tcaBits = tesDriver[channel]->getAllOutputPins();
+    bool enabled = tesDriver[channel]->getOutEnable();
+
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().println(" Parameters:");
+    sender.getSerial().print("  Enabled: ");
+    sender.getSerial().println(enabled ? "Yes" : "No");
+    sender.getSerial().print("  TCA Bits: 0x");
+    sender.getSerial().println(toPaddedHex(tcaBits, 6));
+    sender.getSerial().print("  Shunt Voltage: ");
+    sender.getSerial().print(shuntVoltage);
+    sender.getSerial().println(" mV");
+    sender.getSerial().print("  Bus Voltage: ");
+    sender.getSerial().print(busVoltage);
+    sender.getSerial().println(" V");
+    sender.getSerial().print("  Current: ");
+    sender.getSerial().print(current);
+    sender.getSerial().println(" mA");
+    sender.getSerial().print("  Power: ");
+    sender.getSerial().print(power);
+    sender.getSerial().println(" mW");
+}
+
+void cmdTESSetInt(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     uint32_t value = args[1].getInt();
     tesDriver[channel]->setAllOutputPins(value);
     sender.getSerial().print("TES Channel ");
     sender.getSerial().print(channel + 1);
     sender.getSerial().print( " set TCA Bits to 0x");
-    sender.getSerial().println(value, HEX);
+    sender.getSerial().println(toPaddedHex(value, 6));
+}
+
+void cmdTESSetHex(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* hexString = args[1].getString();
+    uint32_t value = strtoul(hexString, nullptr, 16);
+    tesDriver[channel]->setAllOutputPins(value);
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print( " set TCA Bits to 0x");
+    sender.getSerial().println(toPaddedHex(value, 6));
 }
 
 void cmdTESEnable(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    bool enable = args[1].getInt() != 0;
+    bool enable = true;
+    tesDriver[channel]->setOutEnable(enable);
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(enable ? " Enabled" : " Disabled");
+    sender.getSerial().println();
+}
+
+void cmdTESDisable(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    bool enable = false;
     tesDriver[channel]->setOutEnable(enable);
     sender.getSerial().print("TES Channel ");
     sender.getSerial().print(channel + 1);
@@ -368,6 +471,106 @@ void cmdTESPower(SerialCommands& sender, Args& args) {
     sender.getSerial().print("TES Channel ");
     sender.getSerial().print(channel + 1);
     sender.getSerial().print(" Power: ");
+    sender.getSerial().print(power);
+    sender.getSerial().println(" mW");
+}
+
+void cmdTESSet(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float current_mA = args[1].getFloat();
+    uint32_t finalState = 0;
+    tesDriver[channel]->setCurrent_mA(current_mA);
+    current_mA = tesDriver[channel]->getCurrent_mA();
+    finalState = tesDriver[channel]->getAllOutputPins();
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(" Set Output Current to ");
+    sender.getSerial().print(current_mA);
+    sender.getSerial().print(" mA");
+    sender.getSerial().print(" (TCA Bits: 0x");
+    sender.getSerial().print(toPaddedHex(finalState, 6));
+    sender.getSerial().println(")");
+}
+
+void cmdTESInc(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t delta = args[1].getInt();
+    tesDriver[channel]->bumpOutputPins(delta);
+    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(" Increased TCA Bits by ");
+    sender.getSerial().print(delta);
+    sender.getSerial().print(" to 0x");
+    sender.getSerial().println(toPaddedHex(finalState, 6));
+}
+
+void cmdTESDec(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t delta = args[1].getInt();
+    tesDriver[channel]->bumpOutputPins(-static_cast<int32_t>(delta));
+    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(" Decreased TCA Bits by ");
+    sender.getSerial().print(delta);
+    sender.getSerial().print(" to 0x");
+    sender.getSerial().println(toPaddedHex(finalState, 6));
+}
+
+void cmdTESBits(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t currentState = tesDriver[channel]->getAllOutputPins();
+    sender.getSerial().print("TES Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(" Current TCA Bits: 0x");
+    sender.getSerial().println(toPaddedHex(currentState, 6));
+}
+
+void cmdLNAGetAll(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* target = args[1].getString();
+    float shuntVoltage, busVoltage, current, power;
+    uint16_t dacValue;
+    bool enable;
+
+    if (strcasecmp(target, "DRAIN") == 0) {
+        dacValue = lnaDriver[channel]->readDrain();
+        shuntVoltage = lnaDriver[channel]->getDrainShuntVoltage_mV();
+        busVoltage = lnaDriver[channel]->getDrainBusVoltage_V();
+        current = lnaDriver[channel]->getDrainCurrent_mA();
+        power = lnaDriver[channel]->getDrainPower_mW();
+        enable = lnaDriver[channel]->getDrainEnable();
+    } else if (strcasecmp(target, "GATE") == 0) {
+        dacValue = lnaDriver[channel]->readGate();
+        shuntVoltage = lnaDriver[channel]->getGateShuntVoltage_mV();
+        busVoltage = lnaDriver[channel]->getGateBusVoltage_V();
+        current = lnaDriver[channel]->getGateCurrent_mA();
+        power = lnaDriver[channel]->getGatePower_mW();
+        enable = lnaDriver[channel]->getGateEnable();
+    } else {
+        sender.getSerial().println("Error: Invalid target. Use DRAIN or GATE.");
+        return;
+    }
+    sender.getSerial().print("LNA Channel ");
+    sender.getSerial().print(channel + 1);
+    sender.getSerial().print(" ");
+    sender.getSerial().print(target);
+    sender.getSerial().println(" Parameters:");
+    sender.getSerial().print("  DAC Value: ");
+    sender.getSerial().println(dacValue);
+    sender.getSerial().print("  Enabled: ");
+    sender.getSerial().println(enable ? "Yes" : "No");
+    sender.getSerial().print("  Shunt Voltage: ");
+    sender.getSerial().print(shuntVoltage);
+    sender.getSerial().println(" mV");
+    sender.getSerial().print("  Bus Voltage: ");
+    sender.getSerial().print(busVoltage);
+    sender.getSerial().println(" V");
+    sender.getSerial().print("  Current: ");
+    sender.getSerial().print(current);
+    sender.getSerial().println(" mA");
+    sender.getSerial().print("  Power: ");
     sender.getSerial().print(power);
     sender.getSerial().println(" mW");
 }
