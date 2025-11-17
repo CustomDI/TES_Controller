@@ -23,20 +23,19 @@ uint8_t TESDriver::begin() {
     return 0;
 }
 
-void TESDriver::setOutEnable(bool state) {
+uint8_t TESDriver::setOutEnable(bool state) {
     state = !state; // Invert logic: HIGH = disable, LOW = enable
-    _router->routeTo(&_routeToTesLtc4302); // This will route to the TES LTC4302
-    _tesLtc4302->setGPIO(2, state); // GPIO2 controls OUT_EN
-    _tesLtc4302->setGPIO(1, state); // GPIO1 controls OUT_EN
-    _router->endRoute(&_routeToTesLtc4302); // End routing
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tesLtc4302->setGPIO(2, state)); // GPIO2 controls OUT_EN
+    RETURN_IF_ERROR(_tesLtc4302->setGPIO(1, state)); // GPIO1 controls OUT_EN
+    return disconnect();
 }
 
-bool TESDriver::getOutEnable() { 
-    bool state;
-    _router->routeTo(&_routeToTesLtc4302); // This will route to the TES LTC4302
-    _tesLtc4302->getGPIO(2, state); // GPIO2 controls OUT_EN
-    _router->endRoute(&_routeToTesLtc4302); // End routing
-    return !state; // Invert logic for return value
+uint8_t TESDriver::getOutEnable(bool& state) { 
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tesLtc4302->getGPIO(2, state)); // GPIO2 controls OUT_EN
+    state = !state;
+    return disconnect();
  }
 
 uint8_t TESDriver::getBusVoltage_V(float& busVoltage){

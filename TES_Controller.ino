@@ -273,6 +273,7 @@ void cmdTES(SerialCommands& sender, Args& args) {
     sender.listAllCommands(tesCommands, sizeof(tesCommands) / sizeof(Command));
 }
 
+// TOFIX
 void cmdDAC(SerialCommands& sender, Args& args) {
     uint16_t value = args[0].getInt();
     // Implement setting main DAC value
@@ -284,6 +285,7 @@ void cmdDAC(SerialCommands& sender, Args& args) {
     printYAMLMessage(out, "Main DAC set");
 }
 
+// TOFIX
 void cmdLNASet(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
@@ -518,214 +520,7 @@ void cmdLNADisable(SerialCommands& sender, Args& args) {
         reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
-
-void cmdTESGetAll(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float shuntVoltage, busVoltage, current, power;
-    uint8_t status;
-    status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
-    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
-        return;
-    }
-    status = tesDriver[channel]->getBusVoltage_V(busVoltage);
-    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
-        return;
-    }
-    status = tesDriver[channel]->getCurrent_mA(current);
-    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
-        return;
-    }
-    status = tesDriver[channel]->getPower_mW(power);
-    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
-        return;
-    }
-    uint32_t tcaBits = tesDriver[channel]->getAllOutputPins();
-    bool enabled = tesDriver[channel]->getOutEnable();
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_GET", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "enabled", String(enabled ? "true" : "false"), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(tcaBits, 5), 2, true);
-    printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
-    printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
-    printYAMLKeyValue(out, "current_mA", String(current), 2, false);
-    printYAMLKeyValue(out, "power_mW", String(power), 2, false);
-    printYAMLMessage(out, "TES parameters");
-}
-
-void cmdTESSetInt(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    uint32_t value = args[1].getInt();
-    tesDriver[channel]->setAllOutputPins(value);
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_SETINT", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
-    printYAMLMessage(out, "TES TCA bits set (int)");
-}
-
-void cmdTESSetHex(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    const char* hexString = args[1].getString();
-    uint32_t value = strtoul(hexString, nullptr, 16);
-    if (value > 0xFFFFF) {
-        reportError(sender, "TES_SETHEX_VALUE_ERROR", "Hex value exceeds 20 bits.");
-        return;
-    }
-    tesDriver[channel]->setAllOutputPins(value);
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_SETHEX", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
-    printYAMLMessage(out, "TES TCA bits set (hex)");
-}
-
-void cmdTESEnable(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    bool enable = true;
-    tesDriver[channel]->setOutEnable(enable);
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_ENABLE", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "enabled", String("true"), 2, false);
-    printYAMLMessage(out, "TES outputs enabled");
-}
-
-void cmdTESDisable(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    bool enable = false;
-    tesDriver[channel]->setOutEnable(enable);
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_DISABLE", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "enabled", String("false"), 2, false);
-    printYAMLMessage(out, "TES outputs disabled");
-}
-
-void cmdTESShunt(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float shuntVoltage;
-    uint8_t status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
-    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
-        return;
-    }
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_SHUNT", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
-    printYAMLMessage(out, "TES shunt voltage (mV)");
-}
-
-void cmdTESBus(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float busVoltage;
-    uint8_t status = tesDriver[channel]->getBusVoltage_V(busVoltage);
-    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
-        return;
-    }
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_BUS", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
-    printYAMLMessage(out, "TES bus voltage (V)");
-}
-
-void cmdTESCurrent(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float current;
-    uint8_t status = tesDriver[channel]->getCurrent_mA(current);
-    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
-        return;
-    }
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_CURRENT", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "current_mA", String(current), 2, false);
-    printYAMLMessage(out, "TES current (mA)");
-}
-
-void cmdTESPower(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float power;
-    uint8_t status = tesDriver[channel]->getPower_mW(power);
-    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
-        return;
-    }
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_POWER", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "power_mW", String(power), 2, false);
-    printYAMLMessage(out, "TES power (mW)");
-}
-
-void cmdTESSet(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    float current_mA = args[1].getFloat();
-    uint32_t finalState = 0;
-    uint8_t status;
-    tesDriver[channel]->setCurrent_mA(current_mA);
-    status = tesDriver[channel]->getCurrent_mA(current_mA);
-    if (reportIfError(sender, status, "TES_SET_CURRENT_ERROR", "Failed to set TES output current.")) {
-        return;
-    }
-    finalState = tesDriver[channel]->getAllOutputPins();
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_SET", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "current_mA", String(current_mA), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
-    printYAMLMessage(out, "TES output current set");
-}
-
-void cmdTESInc(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    uint32_t delta = args[1].getInt();
-    tesDriver[channel]->bumpOutputPins(delta);
-    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_INC", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "delta", String(delta), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
-    printYAMLMessage(out, "TES TCA bits increased");
-}
-
-void cmdTESDec(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    uint32_t delta = args[1].getInt();
-    tesDriver[channel]->bumpOutputPins(-static_cast<int32_t>(delta));
-    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_DEC", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "delta", String(delta), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
-    printYAMLMessage(out, "TES TCA bits decreased");
-}
-
-void cmdTESBits(SerialCommands& sender, Args& args) {
-    uint8_t channel = args[0].getInt() - 1;
-    uint32_t currentState = tesDriver[channel]->getAllOutputPins();
-    Stream &out = sender.getSerial();
-    printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "TES_BITS", 2, true);
-    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(currentState, 5), 2, true);
-    printYAMLMessage(out, "TES TCA bits (hex)");
-}
-
+// TOFIX
 void cmdLNAGetAll(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
@@ -797,4 +592,224 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
     printYAMLKeyValue(out, "current_mA", String(current), 2, false);
     printYAMLKeyValue(out, "power_mW", String(power), 2, false);
     printYAMLMessage(out, "LNA parameters");
+}
+// TOFIX
+void cmdTESSetInt(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t value = args[1].getInt();
+    tesDriver[channel]->setAllOutputPins(value);
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_SETINT", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
+    printYAMLMessage(out, "TES TCA bits set (int)");
+}
+
+// TOFIX
+void cmdTESSetHex(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* hexString = args[1].getString();
+    uint32_t value = strtoul(hexString, nullptr, 16);
+    if (value > 0xFFFFF) {
+        reportError(sender, "TES_SETHEX_VALUE_ERROR", "Hex value exceeds 20 bits.");
+        return;
+    }
+    tesDriver[channel]->setAllOutputPins(value);
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_SETHEX", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
+    printYAMLMessage(out, "TES TCA bits set (hex)");
+}
+
+void cmdTESEnable(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    bool enable = true;
+    uint8_t status;
+    status = tesDriver[channel]->setOutEnable(enable);
+    if (reportIfError(sender, status, "TES_ENABLE_ERROR", "Failed to enable TES outputs.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_ENABLE", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "enabled", String("true"), 2, false);
+    printYAMLMessage(out, "TES outputs enabled");
+}
+
+void cmdTESDisable(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    bool enable = false;
+    uint8_t status;
+    status = tesDriver[channel]->setOutEnable(enable);
+    if (reportIfError(sender, status, "TES_ENABLE_ERROR", "Failed to enable TES outputs.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_DISABLE", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "enabled", String("false"), 2, false);
+    printYAMLMessage(out, "TES outputs disabled");
+}
+
+void cmdTESShunt(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float shuntVoltage;
+    uint8_t status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
+    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_SHUNT", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
+    printYAMLMessage(out, "TES shunt voltage (mV)");
+}
+
+void cmdTESBus(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float busVoltage;
+    uint8_t status = tesDriver[channel]->getBusVoltage_V(busVoltage);
+    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_BUS", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
+    printYAMLMessage(out, "TES bus voltage (V)");
+}
+
+void cmdTESCurrent(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float current;
+    uint8_t status = tesDriver[channel]->getCurrent_mA(current);
+    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_CURRENT", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "current_mA", String(current), 2, false);
+    printYAMLMessage(out, "TES current (mA)");
+}
+
+void cmdTESPower(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float power;
+    uint8_t status = tesDriver[channel]->getPower_mW(power);
+    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_POWER", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "power_mW", String(power), 2, false);
+    printYAMLMessage(out, "TES power (mW)");
+}
+
+// TOFIX
+void cmdTESSet(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float current_mA = args[1].getFloat();
+    uint32_t finalState = 0;
+    uint8_t status;
+    tesDriver[channel]->setCurrent_mA(current_mA);
+    status = tesDriver[channel]->getCurrent_mA(current_mA);
+    if (reportIfError(sender, status, "TES_SET_CURRENT_ERROR", "Failed to set TES output current.")) {
+        return;
+    }
+    finalState = tesDriver[channel]->getAllOutputPins();
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_SET", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "current_mA", String(current_mA), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
+    printYAMLMessage(out, "TES output current set");
+}
+// TOFIX
+void cmdTESInc(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t delta = args[1].getInt();
+    tesDriver[channel]->bumpOutputPins(delta);
+    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_INC", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "delta", String(delta), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
+    printYAMLMessage(out, "TES TCA bits increased");
+}
+
+// TOFIX
+void cmdTESDec(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t delta = args[1].getInt();
+    tesDriver[channel]->bumpOutputPins(-static_cast<int32_t>(delta));
+    uint32_t finalState = tesDriver[channel]->getAllOutputPins();
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_DEC", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "delta", String(delta), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
+    printYAMLMessage(out, "TES TCA bits decreased");
+}
+
+// TOFIX
+void cmdTESBits(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    uint32_t currentState = tesDriver[channel]->getAllOutputPins();
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_BITS", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(currentState, 5), 2, true);
+    printYAMLMessage(out, "TES TCA bits (hex)");
+}
+
+// TOFIX
+void cmdTESGetAll(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    float shuntVoltage, busVoltage, current, power;
+    uint8_t status;
+    status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
+    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
+        return;
+    }
+    status = tesDriver[channel]->getBusVoltage_V(busVoltage);
+    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
+        return;
+    }
+    status = tesDriver[channel]->getCurrent_mA(current);
+    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
+        return;
+    }
+    status = tesDriver[channel]->getPower_mW(power);
+    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
+        return;
+    }
+    uint32_t tcaBits = tesDriver[channel]->getAllOutputPins();
+    bool enabled = tesDriver[channel]->getOutEnable();
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "TES_GET", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "enabled", String(enabled ? "true" : "false"), 2, false);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(tcaBits, 5), 2, true);
+    printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
+    printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
+    printYAMLKeyValue(out, "current_mA", String(current), 2, false);
+    printYAMLKeyValue(out, "power_mW", String(power), 2, false);
+    printYAMLMessage(out, "TES parameters");
 }

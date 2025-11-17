@@ -18,8 +18,8 @@ public:
     I2CRoute getRouteToTesLtc4302() { return _routeToTesLtc4302; } // Accessor for the route
 
     // GPIO functionality at LTC4302
-    void setOutEnable(bool state);
-    bool getOutEnable();
+    uint8_t setOutEnable(bool state);
+    uint8_t getOutEnable(bool& state);
 
     // INA functionality
     uint8_t getShuntVoltage_mV(float& shuntVoltage);
