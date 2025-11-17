@@ -1,0 +1,6 @@
+# Example config for DeviceController
+port: /dev/tty.usbmodem2101
+baud: 115200
+timeout: 1.0
+num_tes: 12
+num_lna: 2
