@@ -1,5 +1,6 @@
 #include "TESDriver.h"
 #include "../helpers/search.h"
+#include <math.h>
 
 // Each TESDriver manages a single TES device, which is behind its own LTC4302.
 // Therefore, the concept of "channels on the TES LTC4302 for its devices" is simplified.
@@ -51,13 +52,13 @@ uint8_t TESDriver::getShuntVoltage_mV(float& shuntVoltage){
 
 uint8_t TESDriver::getCurrent_mA(float& current){
     RETURN_IF_ERROR(connect());
-    RETURN_IF_ERROR(_ina.getShuntVoltage_mV(current));
+    RETURN_IF_ERROR(_ina.getCurrent_mA(current));
     return disconnect();
 }
 
 uint8_t TESDriver::getPower_mW(float& power){
     RETURN_IF_ERROR(connect());
-    RETURN_IF_ERROR(_ina.getShuntVoltage_mV(power));
+    RETURN_IF_ERROR(_ina.getPower_mW(power));
     return disconnect();
 }
 
@@ -79,72 +80,56 @@ uint8_t TESDriver::setAllOutputPins(uint32_t state) {
 uint8_t TESDriver::getAllOutputPins(uint32_t &state) {
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_tca.getAllOutputPins(state));
+    Serial.println("TESDriver::getAllOutputPins read state: 0x" + String(state, HEX));
     state &= 0xFFFFFu; //Mask to 20 bits
     return disconnect();
 }
 
-uint8_t TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* finalMeasured,
-                             float tolerance_mA, int maxIter, bool increasing, int delayMs) {
+uint8_t TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* finalMeasured, int delayMs) {
     // Sanity: expected current range 0..20 mA
     if (!(target_mA >= 0.0f && target_mA <= 20.0f)) {
-        return false;
+        return 10; // invalid argument
     }
 
-    // Input domain: 0 .. 2^24-1 (24-bit outputs)
-    const uint32_t max20 = 0xFFFFFu;
-    // Apply function: receive float input (search uses float), round/clamp to 24-bit and apply
-    auto apply = [this, max20](float v) {
-        // clamp and round
-        this->connect();
-        if (v <= 0.0f) {
-            this->setAllOutputPins(0u);
-            return;
+    // Connect once and iterate through bits MSB->LSB greedily.
+    RETURN_IF_ERROR(this->connect());
+
+    uint32_t state = 0u; // start with all outputs off
+    float measured_mA = 0.0f;
+
+    // Apply initial state
+    RETURN_IF_ERROR(this->setAllOutputPins(state));
+    if (delayMs > 0) delay(delayMs);
+    // Measure baseline
+    RETURN_IF_ERROR(this->getCurrent_mA(measured_mA));
+
+    // Greedy MSB-to-LSB bit setting: try each bit, keep it if it improves closeness to target
+    for (int bit = 19; bit >= 0; --bit) {
+        uint32_t candidate = state | ((uint32_t)1 << bit);
+
+        // Set candidate state
+        RETURN_IF_ERROR(this->setAllOutputPins(candidate));
+        if (delayMs > 0) delay(delayMs);
+        // Measure baseline
+        float candidateMeasured = 0.0f;
+        RETURN_IF_ERROR(this->getCurrent_mA(candidateMeasured));
+        if (candidateMeasured >= target_mA) {
+            state = candidate;
+            measured_mA = candidateMeasured;
         }
-        // round to nearest integer
-        uint32_t s = (uint32_t) (v + 0.5f);
-        if (s > max20) s = max20;
-        this->setAllOutputPins(s);
-        this->disconnect();
-    };
-
-    // Read function: return current in mA
-    auto read = [this]() -> float {
-        float _;
-        this->getCurrent_mA(_);
-        return _;
-    };
-
-    // Create binary search controller over input domain mapped to 0..max20 and output 0..20 mA
-    BinarySearchController<decltype(apply), decltype(read)> bs(
-        apply, read,
-        0.0f, (float)max20,
-        0.0f, 20.0f,
-        tolerance_mA,
-        maxIter,
-        increasing
-    );
-
-    // Set a small settle delay so hardware can stabilize after changing outputs.
-    // Uses a non-capturing lambda convertible to a function pointer.
-    // Use a static variable so the lambda remains non-capturing (convertible to function pointer)
-    static int s_settleDelayMs = 0;
-    s_settleDelayMs = delayMs;
-    bs.setSettleCallback([](){ delay(s_settleDelayMs); });
-
-    float finalInput = 0.0f;
-    float finalOutput = 0.0f;
-    bool ok = bs.setTarget(target_mA, &finalInput, &finalOutput);
-
-    // convert finalInput to uint32_t state and return values
-    uint32_t finalStateLocal = 0u;
-    if (finalInput > 0.0f) {
-        finalStateLocal = (uint32_t)(finalInput + 0.5f);
-        if (finalStateLocal > max20) finalStateLocal = max20;
     }
-    if (finalState) *finalState = finalStateLocal;
-    if (finalMeasured) *finalMeasured = finalOutput;
+    delay(delayMs);
+    // Disconnect route
+    RETURN_IF_ERROR(this->disconnect());
 
-    return ok;
+    // Output final state and measured value if requested
+    if (finalState) {
+        *finalState = state;
+    }
+    if (finalMeasured) {
+        *finalMeasured = measured_mA;
+    }
+    return 0;
 }
 
 uint8_t TESDriver::bumpOutputPins(int8_t delta) {

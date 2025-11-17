@@ -27,8 +27,7 @@ public:
     uint8_t getCurrent_mA(float& current);
     uint8_t getPower_mW(float& power);
 
-    uint8_t setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr,
-                       float tolerance_mA = 0.005f, int maxIter = 24, bool increasing = false, int delayMs = 10);
+    uint8_t setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr, int delayMs = 10);
 
     // TCA functionality
     uint8_t setOutputPin(uint8_t pin, bool state);

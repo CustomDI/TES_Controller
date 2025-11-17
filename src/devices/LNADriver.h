@@ -12,8 +12,8 @@
 #define LNA_MCP4728_ADDR      0x60 // Address for MCP4728 behind LNA driver
 #define LNA_INA_DRAIN_ADDR    0x40 // Address for INA219_1 behind LNA driver
 #define LNA_INA_GATE_ADDR     0x41 // Address for INA219_2 behind LNA driver
-#define LNA_INA_SHUNT_RESISTANCE_OHMS 0.1f // Shunt resistance for INA219s
-#define LNA_INA_MAX_EXPECTED_CURRENT_AMPS .32f // Max expected current for INA219s
+#define LNA_INA_SHUNT_RESISTANCE_OHMS 5.0f // Shunt resistance for INA219s
+#define LNA_INA_MAX_EXPECTED_CURRENT_AMPS .064f // Max expected current for INA219s
 
 // MCP4728 channels for LNA functions
 #define LNA_DRAIN_CHANNEL MCP4728_CHANNEL_A

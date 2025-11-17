@@ -62,13 +62,19 @@ uint8_t TCA642ARGJR::writeRegister(uint8_t reg, uint8_t value) {
 }
 
 uint8_t TCA642ARGJR::readRegister(uint8_t reg, uint8_t& value) {
-    uint8_t value = 0;
     Wire.beginTransmission(_address);
     Wire.write(reg);
-    RETURN_IF_ERROR(Wire.endTransmission());
-    Wire.requestFrom(_address, (uint8_t)1);
-    if (Wire.available()) value = Wire.read();
-    return 0;
+    // Use repeated-start (no stop) to transition directly to read without releasing the bus.
+    RETURN_IF_ERROR(Wire.endTransmission(false));
+
+    // Disambiguate overloaded requestFrom by casting to the exact types expected.
+    Wire.requestFrom((uint8_t)_address, (size_t)1);
+    if (Wire.available()) {
+        value = Wire.read();
+        return 0;
+    }
+    // If no data available, return a non-zero error code (5 = short read)
+    return 5;
 }
 
 uint8_t TCA642ARGJR::writeRegisters(uint8_t startReg, const uint8_t* data, size_t length) {
@@ -79,9 +85,19 @@ uint8_t TCA642ARGJR::writeRegisters(uint8_t startReg, const uint8_t* data, size_
 }
 
 uint8_t TCA642ARGJR::readRegisters(uint8_t startReg, uint8_t* data, size_t length) {
+    // Optimize by writing the start register once and then requesting all bytes in one read.
+    Wire.beginTransmission(_address);
+    Wire.write(startReg);
+    RETURN_IF_ERROR(Wire.endTransmission(false)); // repeated start
+
+    Wire.requestFrom((uint8_t)_address, (size_t)length);
     size_t i = 0;
-    for (i; i < length;) {
-        RETURN_IF_ERROR(readRegister(startReg + i, data[i++]));
+    while (Wire.available() && i < length) {
+        data[i++] = Wire.read();
+    }
+    if (i != length) {
+        // Short read
+        return 5;
     }
     return 0;
 }
