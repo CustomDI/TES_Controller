@@ -27,17 +27,15 @@ public:
     uint8_t getCurrent_mA(float& current);
     uint8_t getPower_mW(float& power);
 
-    bool setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr,
+    uint8_t setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr,
                        float tolerance_mA = 0.005f, int maxIter = 24, bool increasing = false, int delayMs = 10);
 
     // TCA functionality
-    void setOutputPin(uint8_t pin, bool state);
-    bool getOutputPin(uint8_t pin);
-    void setAllOutputPins(uint32_t state); // now 24-bit capable
-    uint32_t getAllOutputPins();
-    void bumpOutputPins(int8_t delta); // Adjust output pins by delta (signed)
-    // Diagnostic: read raw output registers (3 bytes)
-    void readOutputRegisters(uint8_t out[3]);
+    uint8_t setOutputPin(uint8_t pin, bool state);
+    uint8_t getOutputPin(uint8_t pin, bool& state);
+    uint8_t setAllOutputPins(uint32_t state); // now 24-bit capable
+    uint8_t getAllOutputPins(uint32_t &state);  // now 24-bit capable
+    uint8_t bumpOutputPins(int8_t delta); // Adjust output pins by delta (signed)
 
 private:
     LTC4302* _tesLtc4302; // Pointer to the TES driver's LTC4302 instance

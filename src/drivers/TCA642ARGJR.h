@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include "../routers/Router.h"
+#include "../helpers/error.h"
 
 // Default 7-bit I2C base address used by project (TESDriver overrides to 0x22)
 #define TCA642ARGJR_ADDRESS 0x22
@@ -29,26 +30,21 @@
 class TCA642ARGJR {
 public:
     TCA642ARGJR(uint8_t address = TCA642ARGJR_ADDRESS);
-    TCA642ARGJR(uint8_t address, Router* router, I2CRoute* route);
 
-    void begin();
+    uint8_t begin();
     // Basic helpers
-    void setOutputPin(uint8_t pin, bool state);
-    bool getOutputPin(uint8_t pin);
-    void setAllOutputPins(uint32_t state); // 24-bit value (lower 24 bits used)
-    uint32_t getAllOutputPins();
-
-    // Low-level register access (kept for multi-byte writes/reads)
-    void writeRegister(uint8_t reg, uint8_t value);
-    uint8_t readRegister(uint8_t reg);
-    void writeRegisters(uint8_t startReg, const uint8_t* data, size_t length);
-    void readRegisters(uint8_t startReg, uint8_t* data, size_t length);
-    void printRoute();
+    uint8_t setOutputPin(uint8_t pin, bool state);
+    uint8_t getOutputPin(uint8_t pin, bool& state);
+    uint8_t setAllOutputPins(uint32_t state); // 24-bit value (lower 24 bits used)
+    uint8_t getAllOutputPins(uint32_t& state);  // 24-bit value (lower 24 bits used)
 
 private:
     uint8_t _address;
-    Router* _router;
-    I2CRoute* _route;
+
+    uint8_t writeRegister(uint8_t reg, uint8_t value);
+    uint8_t readRegister(uint8_t reg, uint8_t& value);
+    uint8_t writeRegisters(uint8_t startReg, const uint8_t* data, size_t length);
+    uint8_t readRegisters(uint8_t startReg, uint8_t* data, size_t length);
 };
 
 #endif // TCA642ARGJR_H

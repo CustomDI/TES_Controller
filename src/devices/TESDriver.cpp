@@ -11,16 +11,15 @@ TESDriver::TESDriver(LTC4302* tesLtc4302, Router* router)
       _router(router),
       // Initialize the route to the TES LTC4302 itself
       _routeToTesLtc4302({_tesLtc4302, nullptr}),
-      _tca(TES_TCA_ADDR, router, &_routeToTesLtc4302),
+      _tca(TES_TCA_ADDR),
       _ina(TES_INA_ADDR){}
 
 uint8_t TESDriver::begin() {
     RETURN_IF_ERROR(_tesLtc4302->begin()); // Call begin on the pointer
     RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tca.begin()); // Initialize TCA642ARGJR
     RETURN_IF_ERROR(_ina.begin()); // Initialize INA219
-    RETURN_IF_ERROR(disconnect());
-    _tca.begin(); // Initialize TCA642ARGJR
-    return 0;
+    return disconnect();
 }
 
 uint8_t TESDriver::setOutEnable(bool state) {
@@ -62,27 +61,29 @@ uint8_t TESDriver::getPower_mW(float& power){
     return disconnect();
 }
 
-void TESDriver::setOutputPin(uint8_t pin, bool state) {
-    _tca.setOutputPin(pin, state);
+uint8_t TESDriver::setOutputPin(uint8_t pin, bool state) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tca.setOutputPin(pin, state));
+    return disconnect();
 }
-bool TESDriver::getOutputPin(uint8_t pin) {
-    return _tca.getOutputPin(pin);
+uint8_t TESDriver::getOutputPin(uint8_t pin, bool& state) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tca.getOutputPin(pin, state));
+    return disconnect();
 }
-void TESDriver::setAllOutputPins(uint32_t state) {
-    _tca.setAllOutputPins(state);
+uint8_t TESDriver::setAllOutputPins(uint32_t state) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tca.setAllOutputPins(state));
+    return disconnect();
 }
-uint32_t TESDriver::getAllOutputPins() {
-    uint32_t value = _tca.getAllOutputPins();
-    value &= 0xFFFFFu; //Mask to 20 bits
-    return value;
+uint8_t TESDriver::getAllOutputPins(uint32_t &state) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_tca.getAllOutputPins(state));
+    state &= 0xFFFFFu; //Mask to 20 bits
+    return disconnect();
 }
 
-void TESDriver::readOutputRegisters(uint8_t out[3]) {
-    // Directly read the TCA's output registers via the TCA driver
-    _tca.readRegisters( (uint8_t)TCA642ARGJR_OUTPUT_PORT0, out, 3 );
-}
-
-bool TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* finalMeasured,
+uint8_t TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* finalMeasured,
                              float tolerance_mA, int maxIter, bool increasing, int delayMs) {
     // Sanity: expected current range 0..20 mA
     if (!(target_mA >= 0.0f && target_mA <= 20.0f)) {
@@ -94,6 +95,7 @@ bool TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* fina
     // Apply function: receive float input (search uses float), round/clamp to 24-bit and apply
     auto apply = [this, max20](float v) {
         // clamp and round
+        this->connect();
         if (v <= 0.0f) {
             this->setAllOutputPins(0u);
             return;
@@ -102,6 +104,7 @@ bool TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* fina
         uint32_t s = (uint32_t) (v + 0.5f);
         if (s > max20) s = max20;
         this->setAllOutputPins(s);
+        this->disconnect();
     };
 
     // Read function: return current in mA
@@ -144,12 +147,13 @@ bool TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* fina
     return ok;
 }
 
-void TESDriver::bumpOutputPins(int8_t delta) {
-    uint32_t currentState = getAllOutputPins();
+uint8_t TESDriver::bumpOutputPins(int8_t delta) {
+    uint32_t currentState;
+    RETURN_IF_ERROR(getAllOutputPins(currentState));
     int32_t newState = (int32_t)currentState + (int32_t)delta;
     if (newState < 0) newState = 0;
     if (newState > 0xFFFFFu) newState = 0xFFFFFu; // Clamp to 20 bits
-    setAllOutputPins((uint32_t)newState);
+    return setAllOutputPins((uint32_t)newState);
 }
 
 uint8_t TESDriver::connect() {
