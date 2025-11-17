@@ -6,6 +6,7 @@
 #include "../drivers/MCP4728.h"
 #include "../drivers/INA219.h"
 #include "../drivers/LTC4302.h"
+#include "../helpers/error.h"
 
 // Define I2C addresses for devices behind the LNA LTC4302
 #define LNA_MCP4728_ADDR      0x60 // Address for MCP4728 behind LNA driver
@@ -30,15 +31,15 @@ public:
     uint16_t readGate();
 
     // Methods to interact with the LNA's INA219s
-    float getDrainShuntVoltage_mV();
-    float getDrainBusVoltage_V();
-    float getDrainCurrent_mA();
-    float getDrainPower_mW();
+    uint8_t getDrainShuntVoltage_mV(float& shuntVoltage);
+    uint8_t getDrainBusVoltage_V(float& busVoltage);
+    uint8_t getDrainCurrent_mA(float& current);
+    uint8_t getDrainPower_mW(float& power);
 
-    float getGateShuntVoltage_mV();
-    float getGateBusVoltage_V();
-    float getGateCurrent_mA();
-    float getGatePower_mW();
+    uint8_t getGateShuntVoltage_mV(float& shuntVoltage);
+    uint8_t getGateBusVoltage_V(float& busVoltage);
+    uint8_t getGateCurrent_mA(float& current);
+    uint8_t getGatePower_mW(float& power);
 
     // Methods to control GPIOs on the LNA LTC4302
     void setDrainEnable(bool state);
@@ -57,6 +58,9 @@ private:
     MCP4728 _lnaDac;
     INA219 _lnaInaDrain;
     INA219 _lnaInaGate;
+
+    uint8_t connect();
+    uint8_t disconnect();
 };
 
 #endif // LNA_DRIVER_H

@@ -22,13 +22,11 @@ public:
     bool getOutEnable();
 
     // INA functionality
-    float getShuntVoltage_mV();
-    float getBusVoltage_V();
-    float getCurrent_mA();
-    float getPower_mW();
-    // Drive current to a target (0..20 mA). This will adjust the 24-bit
-    // output register via `setAllOutputPins` until `getCurrent_mA()` reads
-    // within the provided tolerance. Returns true on success.
+    uint8_t getShuntVoltage_mV(float& shuntVoltage);
+    uint8_t getBusVoltage_V(float& busVoltage);
+    uint8_t getCurrent_mA(float& current);
+    uint8_t getPower_mW(float& power);
+
     bool setCurrent_mA(float target_mA, uint32_t* finalState = nullptr, float* finalMeasured = nullptr,
                        float tolerance_mA = 0.005f, int maxIter = 24, bool increasing = false, int delayMs = 10);
 
@@ -56,6 +54,9 @@ public:
     // Expose low-level drivers for diagnostics (e.g., startup prints in TES_Controller.ino)
     TCA642ARGJR _tca;
     INA219 _ina;
+
+    uint8_t connect();
+    uint8_t disconnect();
 };
 
 #endif // TES_DRIVER_H

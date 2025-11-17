@@ -3,18 +3,19 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+#include "../helpers/error.h"
 
 class LTC4302 {
 public:
     LTC4302(uint8_t i2cAddress);
     void begin();
-    uint8_t readRegister(uint8_t reg);
-    void writeRegister(uint8_t reg, uint8_t value);
-    void writeRegister(uint8_t value);
-    void enableBus();
-    void setGPIO(uint8_t gpioPin, bool state);
-    void getGPIO(uint8_t gpioPin, bool& state);
-    void disableBus();
+    uint8_t readRegister(uint8_t reg, uint8_t& value);
+    uint8_t writeRegister(uint8_t reg, uint8_t value);
+    uint8_t writeRegister(uint8_t value);
+    uint8_t setGPIO(uint8_t gpioPin, bool state);
+    uint8_t getGPIO(uint8_t gpioPin, bool& state);
+    uint8_t enableBus();
+    uint8_t disableBus();
     uint8_t get_i2cAddress() { return _i2cAddress; }
 
 private:

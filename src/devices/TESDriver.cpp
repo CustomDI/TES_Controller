@@ -12,11 +12,13 @@ TESDriver::TESDriver(LTC4302* tesLtc4302, Router* router)
       // Initialize the route to the TES LTC4302 itself
       _routeToTesLtc4302({_tesLtc4302, nullptr}),
       _tca(TES_TCA_ADDR, router, &_routeToTesLtc4302),
-      _ina(TES_INA_ADDR, router, &_routeToTesLtc4302){}
+      _ina(TES_INA_ADDR){}
 
 void TESDriver::begin() {
-    _tesLtc4302->begin(); // Call begin on the pointer    
+    _tesLtc4302->begin(); // Call begin on the pointer
+    connect();
     _ina.begin(); // Initialize INA219
+    disconnect();
     _tca.begin(); // Initialize TCA642ARGJR
 }
 
@@ -36,20 +38,28 @@ bool TESDriver::getOutEnable() {
     return !state; // Invert logic for return value
  }
 
-float TESDriver::getBusVoltage_V(){
-    return _ina.getBusVoltage_V();
+uint8_t TESDriver::getBusVoltage_V(float& busVoltage){
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_ina.getBusVoltage_V(busVoltage));
+    return disconnect();
 }
 
-float TESDriver::getShuntVoltage_mV(){
-    return _ina.getShuntVoltage_mV();
+uint8_t TESDriver::getShuntVoltage_mV(float& shuntVoltage){
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_ina.getShuntVoltage_mV(shuntVoltage));
+    return disconnect();
 }
 
-float TESDriver::getCurrent_mA(){
-    return _ina.getCurrent_mA();
+uint8_t TESDriver::getCurrent_mA(float& current){
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_ina.getShuntVoltage_mV(current));
+    return disconnect();
 }
 
-float TESDriver::getPower_mW(){
-    return _ina.getPower_mW();
+uint8_t TESDriver::getPower_mW(float& power){
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_ina.getShuntVoltage_mV(power));
+    return disconnect();
 }
 
 void TESDriver::setOutputPin(uint8_t pin, bool state) {
@@ -96,7 +106,9 @@ bool TESDriver::setCurrent_mA(float target_mA, uint32_t* finalState, float* fina
 
     // Read function: return current in mA
     auto read = [this]() -> float {
-        return this->getCurrent_mA();
+        float _;
+        this->getCurrent_mA(_);
+        return _;
     };
 
     // Create binary search controller over input domain mapped to 0..max20 and output 0..20 mA
@@ -138,4 +150,12 @@ void TESDriver::bumpOutputPins(int8_t delta) {
     if (newState < 0) newState = 0;
     if (newState > 0xFFFFFu) newState = 0xFFFFFu; // Clamp to 20 bits
     setAllOutputPins((uint32_t)newState);
+}
+
+uint8_t TESDriver::connect() {
+    return _router->routeTo(&_routeToTesLtc4302);
+}
+
+uint8_t TESDriver::disconnect() {
+    return _router->endRoute(&_routeToTesLtc4302);
 }

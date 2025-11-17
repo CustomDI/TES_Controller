@@ -7,14 +7,15 @@ void Router::begin() {
     _baseHub->begin();
 }
 
-void Router::routeTo(I2CRoute* route) {
+uint8_t Router::routeTo(I2CRoute* route) {
     I2CRoute* current = route;
     while (current != nullptr) {
         if (current->hub != nullptr) {
-            current->hub->enableBus(); // Enable the bus for the current hub
+            RETURN_IF_ERROR(current->hub->enableBus()); // Enable the bus for the current hub
         }
         current = current->next;
     }
+    return 0;
 }
 
 void Router::scanDevicesAtEndpoint(I2CRoute* route) {
@@ -62,13 +63,14 @@ void Router::scanDevicesAtEndpoint(I2CRoute* route) {
     endRoute(route);
 }
 
-void Router::endRoute(I2CRoute* route) {
+uint8_t Router::endRoute(I2CRoute* route) {
     if (route == nullptr) return;
 
     // Recurse to the end of the chain first
     endRoute(route->next);
     // Then disable this hub on the way back
     if (route->hub != nullptr) {
-        route->hub->disableBus();
+        RETURN_IF_ERROR(route->hub->disableBus());
     }
+    return 0;
 }

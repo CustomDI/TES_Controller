@@ -14,8 +14,8 @@ LNADriver::LNADriver(LTC4302* lnaLtc4302, Router* router)
       // The route passed to the device driver is the route to the LNA LTC4302.
       // The Router will enable/disable the bus for this LTC4302.
       _lnaDac(LNA_MCP4728_ADDR, _router, &_routeToLnaLtc4302),
-      _lnaInaDrain(LNA_INA_DRAIN_ADDR, _router, &_routeToLnaLtc4302),
-      _lnaInaGate(LNA_INA_GATE_ADDR, _router, &_routeToLnaLtc4302)
+      _lnaInaDrain(LNA_INA_DRAIN_ADDR),
+      _lnaInaGate(LNA_INA_GATE_ADDR)
 {
     // The Router::routeTo() method will enable the bus for the LNA LTC4302.
     // Subsequent I2C communication will then directly address the devices behind it.
@@ -44,41 +44,56 @@ uint16_t LNADriver::readGate() {
     return _lnaDac.readDAC(LNA_GATE_CHANNEL);
 }
 
-float LNADriver::getDrainShuntVoltage_mV() {
-    return _lnaInaDrain.getShuntVoltage_mV();
+uint8_t LNADriver::getDrainShuntVoltage_mV(float& shuntVoltage) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaDrain.getShuntVoltage_mV(shuntVoltage));
+    return disconnect();
 }
 
-float LNADriver::getDrainBusVoltage_V() {
-    return _lnaInaDrain.getBusVoltage_V();
+uint8_t LNADriver::getDrainBusVoltage_V(float& busVoltage) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaDrain.getBusVoltage_V(busVoltage));
+    return disconnect();
 }
 
-float LNADriver::getDrainCurrent_mA() {
-    return _lnaInaDrain.getCurrent_mA();
+uint8_t LNADriver::getDrainCurrent_mA(float& current) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaDrain.getCurrent_mA(current));
+    return disconnect();
 }
 
-float LNADriver::getDrainPower_mW() {
-    return _lnaInaDrain.getPower_mW();
+uint8_t LNADriver::getDrainPower_mW(float& power) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaDrain.getPower_mW(power));
+    return disconnect();
 }
 
-float LNADriver::getGateShuntVoltage_mV() {
-    return _lnaInaGate.getShuntVoltage_mV();
+uint8_t LNADriver::getGateShuntVoltage_mV(float& shuntVoltage) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaGate.getShuntVoltage_mV(shuntVoltage));
+    return disconnect();
 }
 
-float LNADriver::getGateBusVoltage_V() {
-    return _lnaInaGate.getBusVoltage_V();
+uint8_t LNADriver::getGateBusVoltage_V(float& busVoltage) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaGate.getBusVoltage_V(busVoltage));
+    return disconnect();
 }
 
-float LNADriver::getGateCurrent_mA() {
-    return _lnaInaGate.getCurrent_mA();
+uint8_t LNADriver::getGateCurrent_mA(float& current) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaGate.getCurrent_mA(current));
+    return disconnect();
 }
 
-float LNADriver::getGatePower_mW(){
-    return _lnaInaGate.getPower_mW();
+uint8_t LNADriver::getGatePower_mW(float& power){
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaInaGate.getPower_mW(power));
+    return disconnect();
 }
 
 void LNADriver::setGateEnable(bool state) { // False is enable, true is disable
     state = !state; // Invert state for LTC4302 GPIO logic
-    _router->routeTo(&_routeToLnaLtc4302); // This will route to the TES LTC4302
     _lnaLtc4302->setGPIO(1, state);
     _router->endRoute(&_routeToLnaLtc4302); // End routing after operation
 }
@@ -106,3 +121,11 @@ bool LNADriver::getDrainEnable() {
      _lnaLtc4302->setGPIO(2, state);
      _router->endRoute(&_routeToLnaLtc4302);  // End routing after operation
  }
+
+uint8_t LNADriver::connect() {
+    return _router->routeTo(&_routeToLnaLtc4302);
+}
+
+uint8_t LNADriver::disconnect() {
+    return _router->endRoute(&_routeToLnaLtc4302);
+}

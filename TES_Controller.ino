@@ -202,6 +202,27 @@ void printYAMLMessage(Stream &s, const String &message) {
     s.println();
 }
 
+bool reportIfError(SerialCommands& sender, uint8_t status, const char* errKey, const char* message) {
+    if (status) {
+        Stream &out = sender.getSerial();
+        printYAMLHeader(out, "error");
+        printYAMLKeyValue(out, "error", String(errKey), 2, true);
+        // include numeric status code for easier debugging
+        printYAMLKeyValue(out, "code", String(status), 2, false);
+        printYAMLMessage(out, String(message));
+        return true;
+    }
+    return false;
+}
+
+void reportError(SerialCommands& sender, const char* errKey, const char* message) {
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "error");
+    printYAMLKeyValue(out, "error", String(errKey), 2, true);
+    printYAMLMessage(out, String(message));
+}
+
+
 // ---------------------------------------------------------------------------
 
 void setup() {
@@ -288,8 +309,13 @@ void cmdLNASet(SerialCommands& sender, Args& args) {
 void cmdLNAShunt(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
+    float shuntVoltage;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        float shuntVoltage = lnaDriver[channel]->getDrainShuntVoltage_mV();
+        status = lnaDriver[channel]->getDrainShuntVoltage_mV(shuntVoltage);
+        if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Drain shunt voltage.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_SHUNT", 2, true);
@@ -298,7 +324,10 @@ void cmdLNAShunt(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
         printYAMLMessage(out, "Drain shunt voltage (mV)");
     } else if (strcmp(target, "GATE") == 0) {
-        float shuntVoltage = lnaDriver[channel]->getGateShuntVoltage_mV();
+        status = lnaDriver[channel]->getGateShuntVoltage_mV(shuntVoltage);
+        if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Gate shunt voltage.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_SHUNT", 2, true);
@@ -307,18 +336,20 @@ void cmdLNAShunt(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
         printYAMLMessage(out, "Gate shunt voltage (mV)");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
 
 void cmdLNABus(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
+    float busVoltage;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        float busVoltage = lnaDriver[channel]->getDrainBusVoltage_V();
+        status = lnaDriver[channel]->getDrainBusVoltage_V(busVoltage);
+        if (reportIfError(sender, status, "LNA_BUS_READ_ERROR", "Failed to read Drain bus voltage.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_BUS", 2, true);
@@ -327,7 +358,10 @@ void cmdLNABus(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
         printYAMLMessage(out, "Drain bus voltage (V)");
     } else if (strcmp(target, "GATE") == 0) {
-        float busVoltage = lnaDriver[channel]->getDrainBusVoltage_V();
+        status = lnaDriver[channel]->getGateBusVoltage_V(busVoltage);
+        if (reportIfError(sender, status, "LNA_BUS_READ_ERROR", "Failed to read Gate bus voltage.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_BUS", 2, true);
@@ -336,18 +370,20 @@ void cmdLNABus(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
         printYAMLMessage(out, "Gate bus voltage (V)");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
 
 void cmdLNACurrent(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
+    float current;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        float current = lnaDriver[channel]->getDrainCurrent_mA();
+        status = lnaDriver[channel]->getDrainCurrent_mA(current);
+        if (reportIfError(sender, status, "LNA_CURRENT_READ_ERROR", "Failed to read Drain current.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_CURRENT", 2, true);
@@ -356,7 +392,10 @@ void cmdLNACurrent(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "current_mA", String(current), 2, false);
         printYAMLMessage(out, "Drain current (mA)");
     } else if (strcmp(target, "GATE") == 0) {
-        float current = lnaDriver[channel]->getDrainCurrent_mA();
+        status = lnaDriver[channel]->getGateCurrent_mA(current);
+        if (reportIfError(sender, status, "LNA_CURRENT_READ_ERROR", "Failed to read Gate current.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_CURRENT", 2, true);
@@ -365,18 +404,21 @@ void cmdLNACurrent(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "current_mA", String(current), 2, false);
         printYAMLMessage(out, "Gate current (mA)");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
+
     }
 }
 
 void cmdLNAPower(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
+    float power;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        float power = lnaDriver[channel]->getDrainPower_mW();
+        status = lnaDriver[channel]->getDrainPower_mW(power);
+        if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Drain power.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_POWER", 2, true);
@@ -385,7 +427,10 @@ void cmdLNAPower(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "power_mW", String(power), 2, false);
         printYAMLMessage(out, "Drain power (mW)");
     } else if (strcmp(target, "GATE") == 0) {
-        float power = lnaDriver[channel]->getDrainPower_mW();
+        status = lnaDriver[channel]->getGatePower_mW(power);
+        if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Gate power.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_POWER", 2, true);
@@ -394,10 +439,7 @@ void cmdLNAPower(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "power_mW", String(power), 2, false);
         printYAMLMessage(out, "Gate power (mW)");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
 
@@ -463,10 +505,24 @@ void cmdLNADisable(SerialCommands& sender, Args& args) {
 
 void cmdTESGetAll(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    float shuntVoltage = tesDriver[channel]->getShuntVoltage_mV();
-    float busVoltage = tesDriver[channel]->getBusVoltage_V();
-    float current = tesDriver[channel]->getCurrent_mA();
-    float power = tesDriver[channel]->getPower_mW();
+    float shuntVoltage, busVoltage, current, power;
+    uint8_t status;
+    status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
+    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
+        return;
+    }
+    status = tesDriver[channel]->getBusVoltage_V(busVoltage);
+    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
+        return;
+    }
+    status = tesDriver[channel]->getCurrent_mA(current);
+    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
+        return;
+    }
+    status = tesDriver[channel]->getPower_mW(power);
+    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
+        return;
+    }
     uint32_t tcaBits = tesDriver[channel]->getAllOutputPins();
     bool enabled = tesDriver[channel]->getOutEnable();
     Stream &out = sender.getSerial();
@@ -474,7 +530,7 @@ void cmdTESGetAll(SerialCommands& sender, Args& args) {
     printYAMLKeyValue(out, "command", "TES_GET", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
     printYAMLKeyValue(out, "enabled", String(enabled ? "true" : "false"), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(tcaBits, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(tcaBits, 5), 2, true);
     printYAMLKeyValue(out, "shunt_mV", String(shuntVoltage), 2, false);
     printYAMLKeyValue(out, "bus_V", String(busVoltage), 2, false);
     printYAMLKeyValue(out, "current_mA", String(current), 2, false);
@@ -490,7 +546,7 @@ void cmdTESSetInt(SerialCommands& sender, Args& args) {
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_SETINT", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
     printYAMLMessage(out, "TES TCA bits set (int)");
 }
 
@@ -498,12 +554,16 @@ void cmdTESSetHex(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* hexString = args[1].getString();
     uint32_t value = strtoul(hexString, nullptr, 16);
+    if (value > 0xFFFFF) {
+        reportError(sender, "TES_SETHEX_VALUE_ERROR", "Hex value exceeds 20 bits.");
+        return;
+    }
     tesDriver[channel]->setAllOutputPins(value);
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_SETHEX", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(value, 5), 2, true);
     printYAMLMessage(out, "TES TCA bits set (hex)");
 }
 
@@ -533,7 +593,11 @@ void cmdTESDisable(SerialCommands& sender, Args& args) {
 
 void cmdTESShunt(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    float shuntVoltage = tesDriver[channel]->getShuntVoltage_mV();
+    float shuntVoltage;
+    uint8_t status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
+    if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_SHUNT", 2, true);
@@ -544,7 +608,11 @@ void cmdTESShunt(SerialCommands& sender, Args& args) {
 
 void cmdTESBus(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    float busVoltage = tesDriver[channel]->getBusVoltage_V();
+    float busVoltage;
+    uint8_t status = tesDriver[channel]->getBusVoltage_V(busVoltage);
+    if (reportIfError(sender, status, "TES_BUS_READ_ERROR", "Failed to read TES bus voltage.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_BUS", 2, true);
@@ -555,7 +623,11 @@ void cmdTESBus(SerialCommands& sender, Args& args) {
 
 void cmdTESCurrent(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    float current = tesDriver[channel]->getCurrent_mA();
+    float current;
+    uint8_t status = tesDriver[channel]->getCurrent_mA(current);
+    if (reportIfError(sender, status, "TES_CURRENT_READ_ERROR", "Failed to read TES current.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_CURRENT", 2, true);
@@ -566,7 +638,11 @@ void cmdTESCurrent(SerialCommands& sender, Args& args) {
 
 void cmdTESPower(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
-    float power = tesDriver[channel]->getPower_mW();
+    float power;
+    uint8_t status = tesDriver[channel]->getPower_mW(power);
+    if (reportIfError(sender, status, "TES_POWER_READ_ERROR", "Failed to read TES power.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_POWER", 2, true);
@@ -579,15 +655,19 @@ void cmdTESSet(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     float current_mA = args[1].getFloat();
     uint32_t finalState = 0;
+    uint8_t status;
     tesDriver[channel]->setCurrent_mA(current_mA);
-    current_mA = tesDriver[channel]->getCurrent_mA();
+    status = tesDriver[channel]->getCurrent_mA(current_mA);
+    if (reportIfError(sender, status, "TES_SET_CURRENT_ERROR", "Failed to set TES output current.")) {
+        return;
+    }
     finalState = tesDriver[channel]->getAllOutputPins();
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_SET", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
     printYAMLKeyValue(out, "current_mA", String(current_mA), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
     printYAMLMessage(out, "TES output current set");
 }
 
@@ -601,7 +681,7 @@ void cmdTESInc(SerialCommands& sender, Args& args) {
     printYAMLKeyValue(out, "command", "TES_INC", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
     printYAMLKeyValue(out, "delta", String(delta), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
     printYAMLMessage(out, "TES TCA bits increased");
 }
 
@@ -615,7 +695,7 @@ void cmdTESDec(SerialCommands& sender, Args& args) {
     printYAMLKeyValue(out, "command", "TES_DEC", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
     printYAMLKeyValue(out, "delta", String(delta), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(finalState, 5), 2, true);
     printYAMLMessage(out, "TES TCA bits decreased");
 }
 
@@ -626,7 +706,7 @@ void cmdTESBits(SerialCommands& sender, Args& args) {
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_BITS", 2, true);
     printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
-    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(currentState, 6), 2, true);
+    printYAMLKeyValue(out, "tca_bits", String("0x") + toPaddedHex(currentState, 5), 2, true);
     printYAMLMessage(out, "TES TCA bits (hex)");
 }
 
@@ -636,20 +716,45 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
     float shuntVoltage, busVoltage, current, power;
     uint16_t dacValue;
     bool enable;
+    uint8_t status;
 
     if (strcasecmp(target, "DRAIN") == 0) {
         dacValue = lnaDriver[channel]->readDrain();
-        shuntVoltage = lnaDriver[channel]->getDrainShuntVoltage_mV();
-        busVoltage = lnaDriver[channel]->getDrainBusVoltage_V();
-        current = lnaDriver[channel]->getDrainCurrent_mA();
-        power = lnaDriver[channel]->getDrainPower_mW();
+        status = lnaDriver[channel]->getDrainShuntVoltage_mV(shuntVoltage);
+        if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Drain shunt voltage.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getDrainBusVoltage_V(busVoltage);
+        if (reportIfError(sender, status, "LNA_BUS_READ_ERROR", "Failed to read Drain bus voltage.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getDrainCurrent_mA(current);
+        if (reportIfError(sender, status, "LNA_CURRENT_READ_ERROR", "Failed to read Drain current.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getDrainPower_mW(power);
+        if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Drain power.")) {
+            return;
+        }
         enable = lnaDriver[channel]->getDrainEnable();
     } else if (strcasecmp(target, "GATE") == 0) {
         dacValue = lnaDriver[channel]->readGate();
-        shuntVoltage = lnaDriver[channel]->getGateShuntVoltage_mV();
-        busVoltage = lnaDriver[channel]->getGateBusVoltage_V();
-        current = lnaDriver[channel]->getGateCurrent_mA();
-        power = lnaDriver[channel]->getGatePower_mW();
+        status = lnaDriver[channel]->getGateShuntVoltage_mV(shuntVoltage);
+        if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Gate shunt voltage.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getGateBusVoltage_V(busVoltage);
+        if (reportIfError(sender, status, "LNA_BUS_READ_ERROR", "Failed to read Gate bus voltage.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getGateCurrent_mA(current);
+        if (reportIfError(sender, status, "LNA_CURRENT_READ_ERROR", "Failed to read Gate current.")) {
+            return;
+        }
+        status = lnaDriver[channel]->getGatePower_mW(power);
+        if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Gate power.")) {
+            return;
+        }
         enable = lnaDriver[channel]->getGateEnable();
     } else {
         Stream &out = sender.getSerial();
