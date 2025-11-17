@@ -14,7 +14,7 @@ struct I2CRoute {
 class Router {
 public:
     Router(LTC4302* baseHub);
-    void begin();
+    uint8_t begin();
     uint8_t routeTo(I2CRoute* route);
     uint8_t endRoute(I2CRoute* route);
     void scanDevicesAtEndpoint(I2CRoute* route); // New method to scan devices at the endpoint of a route

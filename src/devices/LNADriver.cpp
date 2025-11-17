@@ -9,15 +9,15 @@ LNADriver::LNADriver(LTC4302* lnaLtc4302, Router* router)
     : _lnaLtc4302(lnaLtc4302),
       _router(router),
       _routeToLnaLtc4302({_lnaLtc4302, nullptr}),
-      _lnaDac(LNA_MCP4728_ADDR, _router, &_routeToLnaLtc4302),
+      _lnaDac(LNA_MCP4728_ADDR),
       _lnaInaDrain(LNA_INA_DRAIN_ADDR),
       _lnaInaGate(LNA_INA_GATE_ADDR) {
 }
 
 uint8_t LNADriver::begin() {
     RETURN_IF_ERROR(_lnaLtc4302->begin());
-    _lnaDac.begin();
     RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaDac.begin());
     RETURN_IF_ERROR(_lnaInaDrain.begin(LNA_INA_SHUNT_RESISTANCE_OHMS,
                        LNA_INA_MAX_EXPECTED_CURRENT_AMPS));
     RETURN_IF_ERROR(_lnaInaGate.begin(LNA_INA_SHUNT_RESISTANCE_OHMS,

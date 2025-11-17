@@ -71,6 +71,8 @@ void cmdLNA(SerialCommands& sender, Args& args);
 void cmdTES(SerialCommands& sender, Args& args);
 
 void cmdDAC(SerialCommands& sender, Args& args);
+void cmdDACSet(SerialCommands& sender, Args& args);
+void cmdDACGet(SerialCommands& sender, Args& args);
 
 void cmdLNAGetAll(SerialCommands& sender, Args& args);
 void cmdLNASet(SerialCommands& sender, Args& args);
@@ -124,10 +126,15 @@ Command tesCommands[] = {
     COMMAND(cmdTESPower, "POWER", nullptr, "Get TES Power (mW)"),
 };
 
+Command dacCommands[] = {
+    COMMAND(cmdDACSet, "SET", dacValueArg, nullptr, "Set Main DAC Value"),
+    COMMAND(cmdDACGet, "GET", nullptr, "Get Main DAC Value"),
+};
+
 Command commands[] = {
     COMMAND(cmdLNA, "LNA", lnaChanArg, lnaDrainGate, lnaCommands, "LNA Commands"),
     COMMAND(cmdTES, "TES", tesChanArg, tesCommands, "TES Commands"),
-    COMMAND(cmdDAC, "DAC", dacValueArg, nullptr, "Set Main DAC Value"),
+    COMMAND(cmdDAC, "DAC", dacCommands, "DAC Commands"),
     COMMAND(cmdHelp, "HELP", nullptr, "List All Commands"),
 };
 
@@ -222,7 +229,6 @@ void reportError(SerialCommands& sender, const char* errKey, const char* message
     printYAMLMessage(out, String(message));
 }
 
-
 // ---------------------------------------------------------------------------
 
 void setup() {
@@ -230,13 +236,22 @@ void setup() {
     Serial.println("TES Controller Starting...");
 
     initDeviceArrays();
-    baseHub.begin();
-    router.begin();
-
-    baseHub.enableBus();
-    mainDac.begin();
-
     uint8_t status;
+
+    status = router.begin();
+    if (status) {
+        Serial.println("Error initializing Base Hub LTC4302");
+    }
+    
+    status = baseHub.enableBus();
+    if (status) {
+        Serial.println("Error enabling I2C bus on Base Hub LTC4302");
+    }
+
+    status = mainDac.begin();
+    if (status) {
+        Serial.println("Error initializing Main MCP4728 DAC");
+    }
 
     // Initialize TESs
     for (int i = 0; i < NUM_TES; ++i) {
@@ -274,6 +289,10 @@ void cmdTES(SerialCommands& sender, Args& args) {
 }
 
 void cmdDAC(SerialCommands& sender, Args& args) {
+    sender.listAllCommands(dacCommands, sizeof(dacCommands) / sizeof(Command));
+}
+
+void cmdDACSet(SerialCommands& sender, Args& args) {
     uint16_t value = args[0].getInt();
     uint8_t status;
     // Implement setting main DAC value
@@ -283,9 +302,24 @@ void cmdDAC(SerialCommands& sender, Args& args) {
     }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
-    printYAMLKeyValue(out, "command", "DAC", 2, true);
+    printYAMLKeyValue(out, "command", "DAC_SET", 2, true);
     printYAMLKeyValue(out, "value", String(value), 2, false);
-    printYAMLMessage(out, "Main DAC set");
+    printYAMLMessage(out, "Main DAC value set");
+}
+
+void cmdDACGet(SerialCommands& sender, Args& args) {
+    uint16_t value;
+    uint8_t status;
+    // Implement getting main DAC value
+    status = mainDac.readDAC(MCP4728_CHANNEL_A, value);
+    if (reportIfError(sender, status, "DAC_GET_ERROR", "Failed to get main DAC value.")) {
+        return;
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "DAC_GET", 2, true);
+    printYAMLKeyValue(out, "value", String(value), 2, false);
+    printYAMLMessage(out, "Main DAC value retrieved");
 }
 
 // TOFIX

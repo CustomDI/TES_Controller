@@ -2,9 +2,9 @@
 
 Router::Router(LTC4302* baseHub) : _baseHub(baseHub) {}
 
-void Router::begin() {
+uint8_t Router::begin() {
     // The base hub should already be initialized in setup, but we can ensure it here.
-    _baseHub->begin();
+    return _baseHub->begin();
 }
 
 uint8_t Router::routeTo(I2CRoute* route) {

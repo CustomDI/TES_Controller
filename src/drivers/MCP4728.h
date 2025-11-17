@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <Adafruit_MCP4728.h>
 #include "../routers/Router.h"
+#include "../helpers/error.h"
 
 class MCP4728 {
 public:
