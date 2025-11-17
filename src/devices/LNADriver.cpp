@@ -26,16 +26,28 @@ uint8_t LNADriver::begin() {
 }
 
 // Methods to interact with the LNA's MCP4728
-void LNADriver::writeDrain(uint16_t value) {
-    _lnaDac.writeDAC(LNA_DRAIN_CHANNEL, value);  // Channel A controls Drain
+uint8_t LNADriver::writeDrain(uint16_t value) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, value));  // Channel A controls Drain
+    return disconnect();
 }
-void LNADriver::writeGate(uint16_t value) {
-    _lnaDac.writeDAC(LNA_GATE_CHANNEL, value);  // Channel B controls Gate
+uint8_t LNADriver::writeGate(uint16_t value) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, value));  // Channel A controls Drain
+    return disconnect();
 }
 
-uint16_t LNADriver::readDrain() { return _lnaDac.readDAC(LNA_DRAIN_CHANNEL); }
+uint8_t LNADriver::readDrain(uint16_t& value) { 
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaDac.readDAC(LNA_DRAIN_CHANNEL, value));
+    return disconnect();
+}
 
-uint16_t LNADriver::readGate() { return _lnaDac.readDAC(LNA_GATE_CHANNEL); }
+uint8_t LNADriver::readGate(uint16_t& value) {
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_lnaDac.readDAC(LNA_GATE_CHANNEL, value));
+    return disconnect();
+}
 
 uint8_t LNADriver::getDrainShuntVoltage_mV(float& shuntVoltage) {
     RETURN_IF_ERROR(connect());

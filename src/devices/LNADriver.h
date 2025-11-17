@@ -25,10 +25,10 @@ public:
     I2CRoute getRouteToLnaLtc4302() { return _routeToLnaLtc4302; } // Accessor for the route
 
     // // Methods to interact with the LNA's MCP4728
-    void writeDrain(uint16_t value);
-    void writeGate(uint16_t value);
-    uint16_t readDrain();
-    uint16_t readGate();
+    uint8_t writeDrain(uint16_t value);
+    uint8_t writeGate(uint16_t value);
+    uint8_t readDrain(uint16_t& value);
+    uint8_t readGate(uint16_t& value);
 
     // Methods to interact with the LNA's INA219s
     uint8_t getDrainShuntVoltage_mV(float& shuntVoltage);

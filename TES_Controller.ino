@@ -34,7 +34,7 @@ Router router(&baseHub);
 
 // Route for main MCP4728 (Base Hub -> MCP4728)
 I2CRoute routeToMainMCP4728 = { &baseHub, nullptr };
-MCP4728 mainDac(BASE_HUB_MCP4728_ADDR, &router, &routeToMainMCP4728);
+MCP4728 mainDac(BASE_HUB_MCP4728_ADDR);
 
 // Use pointer arrays so the active count can vary at runtime/compile-time
 LTC4302* tesLTC[NUM_TES];
@@ -273,11 +273,14 @@ void cmdTES(SerialCommands& sender, Args& args) {
     sender.listAllCommands(tesCommands, sizeof(tesCommands) / sizeof(Command));
 }
 
-// TOFIX
 void cmdDAC(SerialCommands& sender, Args& args) {
     uint16_t value = args[0].getInt();
+    uint8_t status;
     // Implement setting main DAC value
-    mainDac.writeDAC(MCP4728_CHANNEL_A, value);
+    status = mainDac.writeDAC(MCP4728_CHANNEL_A, value);
+    if (reportIfError(sender, status, "DAC_SET_ERROR", "Failed to set main DAC value.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "DAC", 2, true);
@@ -290,8 +293,12 @@ void cmdLNASet(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
     uint16_t value = args[2].getInt();
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        lnaDriver[channel]->writeDrain(value);
+        status = lnaDriver[channel]->writeDrain(value);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Drain DAC value.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_SET", 2, true);
@@ -300,7 +307,10 @@ void cmdLNASet(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "value", String(value), 2, false);
         printYAMLMessage(out, "LNA DRAIN DAC value set");
     } else if (strcmp(target, "GATE") == 0) {
-        lnaDriver[channel]->writeGate(value);
+        status = lnaDriver[channel]->writeGate(value);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Gate DAC value.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_SET", 2, true);
@@ -530,7 +540,10 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
     uint8_t status;
 
     if (strcasecmp(target, "DRAIN") == 0) {
-        dacValue = lnaDriver[channel]->readDrain();
+        status = lnaDriver[channel]->readDrain(dacValue);
+        if (reportIfError(sender, status, "LNA_DAC_READ_ERROR", "Failed to read Drain DAC value.")) {
+            return;
+        }
         status = lnaDriver[channel]->getDrainShuntVoltage_mV(shuntVoltage);
         if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Drain shunt voltage.")) {
             return;
@@ -552,7 +565,10 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
             return;
         }
     } else if (strcasecmp(target, "GATE") == 0) {
-        dacValue = lnaDriver[channel]->readGate();
+        status = lnaDriver[channel]->readGate(dacValue);
+        if (reportIfError(sender, status, "LNA_DAC_READ_ERROR", "Failed to read Gate DAC value.")) {
+            return;
+        }
         status = lnaDriver[channel]->getGateShuntVoltage_mV(shuntVoltage);
         if (reportIfError(sender, status, "LNA_SHUNT_READ_ERROR", "Failed to read Gate shunt voltage.")) {
             return;
@@ -783,6 +799,7 @@ void cmdTESGetAll(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     float shuntVoltage, busVoltage, current, power;
     uint8_t status;
+    bool enabled;
     status = tesDriver[channel]->getShuntVoltage_mV(shuntVoltage);
     if (reportIfError(sender, status, "TES_SHUNT_READ_ERROR", "Failed to read TES shunt voltage.")) {
         return;
@@ -800,7 +817,10 @@ void cmdTESGetAll(SerialCommands& sender, Args& args) {
         return;
     }
     uint32_t tcaBits = tesDriver[channel]->getAllOutputPins();
-    bool enabled = tesDriver[channel]->getOutEnable();
+    status = tesDriver[channel]->getOutEnable(enabled);
+    if (reportIfError(sender, status, "TES_ENABLE_READ_ERROR", "Failed to read TES enable state.")) {
+        return;
+    }
     Stream &out = sender.getSerial();
     printYAMLHeader(out, "ok");
     printYAMLKeyValue(out, "command", "TES_GET", 2, true);
