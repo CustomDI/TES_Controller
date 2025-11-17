@@ -14,12 +14,13 @@ TESDriver::TESDriver(LTC4302* tesLtc4302, Router* router)
       _tca(TES_TCA_ADDR, router, &_routeToTesLtc4302),
       _ina(TES_INA_ADDR){}
 
-void TESDriver::begin() {
-    _tesLtc4302->begin(); // Call begin on the pointer
-    connect();
-    _ina.begin(); // Initialize INA219
-    disconnect();
+uint8_t TESDriver::begin() {
+    RETURN_IF_ERROR(_tesLtc4302->begin()); // Call begin on the pointer
+    RETURN_IF_ERROR(connect());
+    RETURN_IF_ERROR(_ina.begin()); // Initialize INA219
+    RETURN_IF_ERROR(disconnect());
     _tca.begin(); // Initialize TCA642ARGJR
+    return 0;
 }
 
 void TESDriver::setOutEnable(bool state) {

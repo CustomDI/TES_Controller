@@ -2,11 +2,11 @@
 
 LTC4302::LTC4302(uint8_t i2cAddress) : _i2cAddress(i2cAddress) {}
 
-void LTC4302::begin() {
+uint8_t LTC4302::begin() {
     Wire.begin();
-    disableBus(); // Start with bus disabled
-    setGPIO(1, true); // Set GPIO1 HIGH
-    setGPIO(2, true); // Set GPIO2 HIGH
+    RETURN_IF_ERROR(disableBus()); // Start with bus disabled
+    RETURN_IF_ERROR(setGPIO(1, true)); // Set GPIO1 HIGH
+    RETURN_IF_ERROR(setGPIO(2, true)); // Set GPIO2 HIGH
 }
 
 uint8_t LTC4302::readRegister(uint8_t reg, uint8_t& value) {
@@ -17,7 +17,7 @@ uint8_t LTC4302::readRegister(uint8_t reg, uint8_t& value) {
     if (Wire.available()) {
         value = Wire.read();
     } else {
-        return 1;
+        return 10;
     }
     return 0;
 }
@@ -39,7 +39,7 @@ uint8_t LTC4302::setGPIO(uint8_t gpioPin, bool state) {
     // GPIO1 -> bit 5, GPIO2 -> bit 6 in register 0x01
     if (gpioPin < 1 || gpioPin > 2) {
         Serial.println("LTC4302: Invalid GPIO pin (use 1 or 2)");
-        return;
+        return 10;
     }
     uint8_t bit = (gpioPin == 1) ? (1 << 5) : (1 << 6);
     uint8_t regValue;
@@ -59,7 +59,7 @@ uint8_t LTC4302::getGPIO(uint8_t gpioPin, bool& state) {
     if (gpioPin < 1 || gpioPin > 2) {
         Serial.println("LTC4302: Invalid GPIO pin (use 1 or 2)");
         state = false;
-        return;
+        return 10;
     }
     uint8_t bit = (gpioPin == 1) ? (1 << 5) : (1 << 6);
     uint8_t regValue;

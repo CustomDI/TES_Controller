@@ -21,7 +21,7 @@
 class LNADriver {
 public:
     LNADriver(LTC4302* lnaLtc4302, Router* router); // Removed baseHubChannel
-    void begin();
+    uint8_t begin();
     I2CRoute getRouteToLnaLtc4302() { return _routeToLnaLtc4302; } // Accessor for the route
 
     // // Methods to interact with the LNA's MCP4728
@@ -42,10 +42,10 @@ public:
     uint8_t getGatePower_mW(float& power);
 
     // Methods to control GPIOs on the LNA LTC4302
-    void setDrainEnable(bool state);
-    void setGateEnable(bool state);
-    bool getDrainEnable();
-    bool getGateEnable();
+    uint8_t setDrainEnable(bool state);
+    uint8_t setGateEnable(bool state);
+    uint8_t getDrainEnable(bool& state);
+    uint8_t getGateEnable(bool& state);
 
 private:
     LTC4302* _lnaLtc4302; // Pointer to the LNA's LTC4302 instance

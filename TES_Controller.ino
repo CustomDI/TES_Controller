@@ -236,13 +236,21 @@ void setup() {
     baseHub.enableBus();
     mainDac.begin();
 
+    uint8_t status;
+
     // Initialize TESs
     for (int i = 0; i < NUM_TES; ++i) {
-        tesDriver[i]->begin();
+        status = tesDriver[i]->begin();
+        if (status) {
+            Serial.print("Error initializing TES Driver for channel "); Serial.println(i + 1);
+        }
     }
     // Initialize LNAs
     for (int i = 0; i < NUM_LNA; ++i) {
-        lnaDriver[i]->begin();
+        status = lnaDriver[i]->begin();
+        if (status) {
+            Serial.print("Error initializing LNA Driver for channel "); Serial.println(i + 1);
+        }
     }
 
     // mainDac.writeDAC(MCP4728_CHANNEL_A, 1024); // Set channel A to ~1/4-scale (4095 max)
@@ -447,8 +455,12 @@ void cmdLNAEnable(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
     bool enable = true;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        lnaDriver[channel]->setDrainEnable(enable);
+        status = lnaDriver[channel]->setDrainEnable(enable);
+        if (reportIfError(sender, status, "LNA_DRAIN_ENABLE_ERROR", "Failed to enable Drain.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
@@ -457,7 +469,10 @@ void cmdLNAEnable(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "enabled", String("true"), 2, false);
         printYAMLMessage(out, "Drain enabled");
     } else if (strcmp(target, "GATE") == 0) {
-        lnaDriver[channel]->setGateEnable(enable);
+        status = lnaDriver[channel]->setGateEnable(enable);
+        if (reportIfError(sender, status, "LNA_GATE_ENABLE_ERROR", "Failed to enable Gate.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
         printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
@@ -466,10 +481,7 @@ void cmdLNAEnable(SerialCommands& sender, Args& args) {
         printYAMLKeyValue(out, "enabled", String("true"), 2, false);
         printYAMLMessage(out, "Gate enabled");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
 
@@ -477,29 +489,33 @@ void cmdLNADisable(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
     bool enable = false;
+    uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
-        lnaDriver[channel]->setDrainEnable(enable);
+        status = lnaDriver[channel]->setDrainEnable(enable);
+        if (reportIfError(sender, status, "LNA_DRAIN_ENABLE_ERROR", "Failed to enable Drain.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
-        printYAMLKeyValue(out, "command", "LNA_DISABLE", 2, true);
+        printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
         printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
         printYAMLKeyValue(out, "target", "DRAIN", 2, true);
-        printYAMLKeyValue(out, "enabled", String("false"), 2, false);
-        printYAMLMessage(out, "Drain disabled");
+        printYAMLKeyValue(out, "enabled", String("true"), 2, false);
+        printYAMLMessage(out, "Drain enabled");
     } else if (strcmp(target, "GATE") == 0) {
-        lnaDriver[channel]->setGateEnable(enable);
+        status = lnaDriver[channel]->setGateEnable(enable);
+        if (reportIfError(sender, status, "LNA_GATE_ENABLE_ERROR", "Failed to enable Gate.")) {
+            return;
+        }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
-        printYAMLKeyValue(out, "command", "LNA_DISABLE", 2, true);
+        printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
         printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
         printYAMLKeyValue(out, "target", "GATE", 2, true);
-        printYAMLKeyValue(out, "enabled", String("false"), 2, false);
-        printYAMLMessage(out, "Gate disabled");
+        printYAMLKeyValue(out, "enabled", String("true"), 2, false);
+        printYAMLMessage(out, "Gate enabled");
     } else {
-        Stream &out = sender.getSerial();
-        printYAMLHeader(out, "error");
-        printYAMLKeyValue(out, "error", "Invalid target. Use DRAIN or GATE.", 2, true);
-        printYAMLMessage(out, "Invalid target");
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }
 }
 
@@ -736,7 +752,10 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
         if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Drain power.")) {
             return;
         }
-        enable = lnaDriver[channel]->getDrainEnable();
+        status = lnaDriver[channel]->getDrainEnable(enable);
+        if (reportIfError(sender, status, "LNA_ENABLE_READ_ERROR", "Failed to read Drain enable state.")) {
+            return;
+        }
     } else if (strcasecmp(target, "GATE") == 0) {
         dacValue = lnaDriver[channel]->readGate();
         status = lnaDriver[channel]->getGateShuntVoltage_mV(shuntVoltage);
@@ -755,7 +774,10 @@ void cmdLNAGetAll(SerialCommands& sender, Args& args) {
         if (reportIfError(sender, status, "LNA_POWER_READ_ERROR", "Failed to read Gate power.")) {
             return;
         }
-        enable = lnaDriver[channel]->getGateEnable();
+        status = lnaDriver[channel]->getGateEnable(enable);
+        if (reportIfError(sender, status, "LNA_ENABLE_READ_ERROR", "Failed to read Gate enable state.")) {
+            return;
+        }
     } else {
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "error");

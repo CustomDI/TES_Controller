@@ -14,7 +14,7 @@
 class TESDriver {
 public:
     TESDriver(LTC4302* tesLtc4302, Router* router); // Removed baseHubChannel
-    void begin();
+    uint8_t begin();
     I2CRoute getRouteToTesLtc4302() { return _routeToTesLtc4302; } // Accessor for the route
 
     // GPIO functionality at LTC4302

@@ -8,7 +8,7 @@
 class LTC4302 {
 public:
     LTC4302(uint8_t i2cAddress);
-    void begin();
+    uint8_t begin();
     uint8_t readRegister(uint8_t reg, uint8_t& value);
     uint8_t writeRegister(uint8_t reg, uint8_t value);
     uint8_t writeRegister(uint8_t value);
