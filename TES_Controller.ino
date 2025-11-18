@@ -53,6 +53,12 @@ constexpr auto tesChanArg =
 constexpr auto lnaDrainGate = 
     ARG(ArgType::String, "DRAIN|GATE");
 
+constexpr auto lnaCurrentArg = 
+    ARG(ArgType::Float, 0, 64, "CURRENT");
+
+constexpr auto lnaVoltageArg = 
+    ARG(ArgType::Float, 0, 5, "VOLTAGE");
+
 constexpr auto dacValueArg =
     ARG(ArgType::Int, 0, 4095, "VALUE");
 
@@ -65,7 +71,8 @@ constexpr auto tesTCAHexArg =
 constexpr auto tcaCurrentArg = 
     ARG(ArgType::Float, 0, 20, "CURRENT");
 
-
+constexpr auto delayMsArg = 
+    ARG(ArgType::Int, 0, 10000, "DELAY_MS");
 
 void cmdLNA(SerialCommands& sender, Args& args);
 void cmdTES(SerialCommands& sender, Args& args);
@@ -75,7 +82,9 @@ void cmdDACSet(SerialCommands& sender, Args& args);
 void cmdDACGet(SerialCommands& sender, Args& args);
 
 void cmdLNAGetAll(SerialCommands& sender, Args& args);
-void cmdLNASet(SerialCommands& sender, Args& args);
+void cmdLNASetCurrent(SerialCommands& sender, Args& args);
+void cmdLNASetVoltage(SerialCommands& sender, Args& args);
+void cmdLNASetDac(SerialCommands& sender, Args& args);
 void cmdLNAShunt(SerialCommands& sender, Args& args);
 void cmdLNABus(SerialCommands& sender, Args& args);
 void cmdLNACurrent(SerialCommands& sender, Args& args);
@@ -103,7 +112,9 @@ Command lnaCommands[] = {
     COMMAND(cmdLNAGetAll, "GET", nullptr, "Get All LNA Parameters for Gate/Drain"),
     COMMAND(cmdLNAEnable, "ENABLE", nullptr, "Enable Gate/Drain"),
     COMMAND(cmdLNADisable, "DISABLE", nullptr, "Disable Gate/Drain"),
-    COMMAND(cmdLNASet, "SET", dacValueArg, nullptr, "Set Gate/Drain DAC Value"),
+    COMMAND(cmdLNASetCurrent, "SETMA", lnaCurrentArg, nullptr, "Search and set Gate/Drain DAC Value (mA)"),
+    COMMAND(cmdLNASetVoltage, "SETV", lnaVoltageArg, nullptr, "Search and set Gate/Drain DAC Value (V)"),
+    COMMAND(cmdLNASetDac, "SETDAC", dacValueArg, nullptr, "Set Gate/Drain DAC Value"),
     COMMAND(cmdLNAShunt, "SHUNT", nullptr, "Get Gate/Drain Shunt Voltage (mV)"),
     COMMAND(cmdLNABus, "BUS", nullptr, "Get Gate/Drain Bus Voltage (V)"),
     COMMAND(cmdLNACurrent, "CURRENT", nullptr, "Get Gate/Drain Current (mA)"),
@@ -321,8 +332,63 @@ void cmdDACGet(SerialCommands& sender, Args& args) {
     printYAMLKeyValue(out, "value", String(value), 2, false);
     printYAMLMessage(out, "Main DAC value retrieved");
 }
+void cmdLNASetCurrent(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* target = args[1].getString();
+    float target_mA = args[2].getFloat();
+    uint16_t dacValue;
+    uint8_t status;
+    if (strcmp(target, "DRAIN") == 0) {
+        status = lnaDriver[channel]->setDrainCurrent(target_mA, dacValue, 1);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Drain current.")) {
+            return;
+        }
+    } else if (strcmp(target, "GATE") == 0) {
+        status = lnaDriver[channel]->setGateCurrent(target_mA, dacValue, 1);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Gate current.")) {
+            return;
+        }    } else {
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "LNA_SET", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "target", target, 2, true);
+    printYAMLKeyValue(out, "current_mA", String(target_mA, 4), 2, false);
+    printYAMLKeyValue(out, "dac_value", String(dacValue), 2, false);
+    printYAMLMessage(out, "LNA current set");
+}
 
-void cmdLNASet(SerialCommands& sender, Args& args) {
+void cmdLNASetVoltage(SerialCommands& sender, Args& args) {
+    uint8_t channel = args[0].getInt() - 1;
+    const char* target = args[1].getString();
+    float target_V = args[2].getFloat();
+    uint16_t dacValue;
+    uint8_t status;
+    if (strcmp(target, "DRAIN") == 0) {
+        status = lnaDriver[channel]->setDrainVoltage(target_V, dacValue, 1);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Drain voltage.")) {
+            return;
+        }
+    } else if (strcmp(target, "GATE") == 0) {
+        status = lnaDriver[channel]->setGateVoltage(target_V, dacValue, 1);
+        if (reportIfError(sender, status, "LNA_SET_ERROR", "Failed to set Gate voltage.")) {
+            return;
+        }    } else {
+        reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
+    }
+    Stream &out = sender.getSerial();
+    printYAMLHeader(out, "ok");
+    printYAMLKeyValue(out, "command", "LNA_SET", 2, true);
+    printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
+    printYAMLKeyValue(out, "target", target, 2, true);
+    printYAMLKeyValue(out, "voltage_V", String(target_V, 4), 2, false);
+    printYAMLKeyValue(out, "dac_value", String(dacValue), 2, false);
+    printYAMLMessage(out, "LNA voltage set");
+}
+
+void cmdLNASetDac(SerialCommands& sender, Args& args) {
     uint8_t channel = args[0].getInt() - 1;
     const char* target = args[1].getString();
     uint16_t value = args[2].getInt();

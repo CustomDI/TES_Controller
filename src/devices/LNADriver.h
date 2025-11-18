@@ -30,6 +30,11 @@ public:
     uint8_t readDrain(uint16_t& value);
     uint8_t readGate(uint16_t& value);
 
+    uint8_t setDrainCurrent(float& target_mA, uint16_t& dacValue, uint8_t delayMs = 10);
+    uint8_t setGateCurrent(float& target_mA, uint16_t& dacValue, uint8_t delayMs = 10);
+    uint8_t setDrainVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs = 10);
+    uint8_t setGateVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs = 10);
+
     // Methods to interact with the LNA's INA219s
     uint8_t getDrainShuntVoltage_mV(float& shuntVoltage);
     uint8_t getDrainBusVoltage_V(float& busVoltage);

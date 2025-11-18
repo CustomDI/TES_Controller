@@ -49,6 +49,84 @@ uint8_t LNADriver::readGate(uint16_t& value) {
     return disconnect();
 }
 
+uint8_t LNADriver::setDrainCurrent(float& target_mA, uint16_t& dacValue, uint8_t delayMs) {
+    if (!(target_mA >= 0.0f && target_mA <= 64.0f)) {
+        return 10; // invalid argument
+    }
+    RETURN_IF_ERROR(connect());
+    float readCurrent = 0;
+    dacValue = 0;
+    while(readCurrent < target_mA && dacValue < 4095) {
+        dacValue++;
+        RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, dacValue));
+        delay(delayMs); // Allow time for settling
+        RETURN_IF_ERROR(_lnaInaDrain.getCurrent_mA(readCurrent));
+    }
+    dacValue = (dacValue > 0 && dacValue < 4095) ? dacValue - 1 : 0;
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, dacValue));
+    RETURN_IF_ERROR(_lnaInaDrain.getCurrent_mA(target_mA));
+    return disconnect();
+}
+
+uint8_t LNADriver::setGateCurrent(float& target_mA, uint16_t& dacValue, uint8_t delayMs) {
+    if (!(target_mA >= 0.0f && target_mA <= 64.0f)) {
+        return 10; // invalid argument
+    }
+    target_mA = -target_mA; // Gate current is negative
+    RETURN_IF_ERROR(connect());
+    float readCurrent = 0;
+    dacValue = 0;
+    while(readCurrent > target_mA && dacValue < 4095) {
+        dacValue++;
+        RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_GATE_CHANNEL, dacValue));
+        delay(delayMs); // Allow time for settling
+        RETURN_IF_ERROR(_lnaInaGate.getCurrent_mA(readCurrent));
+    }
+    dacValue = (dacValue > 0 && dacValue < 4095) ? dacValue - 1 : 0;
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_GATE_CHANNEL, dacValue));
+    RETURN_IF_ERROR(_lnaInaGate.getCurrent_mA(target_mA));
+    return disconnect();
+}
+
+uint8_t LNADriver::setDrainVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs) {
+    if (!(target_V >= 0.0f && target_V <= 5.0f)) {
+        return 10; // invalid argument
+    }
+    RETURN_IF_ERROR(connect());
+    float readVoltage = 0;
+    dacValue = 0;
+    while(readVoltage < target_V && dacValue < 4095) {
+        dacValue++;
+        RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, dacValue));
+        delay(delayMs); // Allow time for settling
+        RETURN_IF_ERROR(_lnaInaDrain.getBusVoltage_V(readVoltage));
+    }
+    dacValue = (dacValue > 0 && dacValue < 4095) ? dacValue - 1 : 0;
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_DRAIN_CHANNEL, dacValue));
+    RETURN_IF_ERROR(_lnaInaDrain.getBusVoltage_V(target_V));
+    return disconnect();
+}
+
+uint8_t LNADriver::setGateVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs) {
+    if (!(target_V >= 0.0f && target_V <= 5.0f)) {
+        return 10; // invalid argument
+    }
+    RETURN_IF_ERROR(connect());
+    float readVoltage = 0;
+    dacValue = 0;
+    while(readVoltage < target_V && dacValue < 4095) {
+        dacValue++;
+        RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_GATE_CHANNEL, dacValue));
+        delay(delayMs); // Allow time for settling
+        RETURN_IF_ERROR(_lnaInaGate.getBusVoltage_V(readVoltage));
+    }
+    dacValue = (dacValue > 0 && dacValue < 4095) ? dacValue - 1 : 0;
+    RETURN_IF_ERROR(_lnaDac.writeDAC(LNA_GATE_CHANNEL, dacValue));
+    RETURN_IF_ERROR(_lnaInaGate.getBusVoltage_V(target_V));
+    target_V = -target_V; // Gate voltage is negative
+    return disconnect();
+}
+
 uint8_t LNADriver::getDrainShuntVoltage_mV(float& shuntVoltage) {
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_lnaInaDrain.getShuntVoltage_mV(shuntVoltage));
@@ -58,6 +136,7 @@ uint8_t LNADriver::getDrainShuntVoltage_mV(float& shuntVoltage) {
 uint8_t LNADriver::getDrainBusVoltage_V(float& busVoltage) {
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_lnaInaDrain.getBusVoltage_V(busVoltage));
+    busVoltage = -busVoltage; // Drain voltage is negative
     return disconnect();
 }
 

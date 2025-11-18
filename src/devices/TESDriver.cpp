@@ -1,6 +1,4 @@
 #include "TESDriver.h"
-#include "../helpers/search.h"
-#include <math.h>
 
 // Each TESDriver manages a single TES device, which is behind its own LTC4302.
 // Therefore, the concept of "channels on the TES LTC4302 for its devices" is simplified.

@@ -141,41 +141,41 @@ class LnaController:
     
     def enable(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} ENABLE {target}"
+        cmd = f"LNA {self.channel} {target} ENABLE"
         return self._req(cmd)
 
     def disable(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} DISABLE {target}"
+        cmd = f"LNA {self.channel} {target} DISABLE"
         return self._req(cmd)
 
     def set_dac(self, target: str, value: int) -> Dict[str, Any]:
         assert 0 <= value <= 0xFFFF, "value must be between 0 and 0xFFFF"
         self._check_target(target)
-        cmd = f"LNA {self.channel} SET {target} {value}"
+        cmd = f"LNA {self.channel} {target} SET {value}"
         return self._req(cmd)
 
     def get_all(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} GET {target}"
+        cmd = f"LNA {self.channel} {target} GET"
         return self._req(cmd)
 
     def get_shunt(self, target: str) -> Dict[str, Any]:
         self.channel._check_target(target)
-        cmd = f"LNA {self.channel} SHUNT {target}"
+        cmd = f"LNA {self.channel} {target} SHUNT"
         return self._req(cmd)
 
     def get_bus(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} BUS {target}"
+        cmd = f"LNA {self.channel} {target} BUS"
         return self._req(cmd)
 
     def get_current(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} CURRENT {target}"
+        cmd = f"LNA {self.channel} {target} CURRENT"
         return self._req(cmd)
 
     def get_power(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
-        cmd = f"LNA {self.channel} POWER {target}"
+        cmd = f"LNA {self.channel} {target} POWER"
         return self._req(cmd)
