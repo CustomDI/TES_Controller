@@ -3,7 +3,7 @@ from typing import Optional, Dict, Any
 class CommandError(RuntimeError):
     pass
 
-class DacController:
+class FluxRampController:
     def __init__(self, client):
         self.client = client
 
@@ -22,7 +22,7 @@ class DacController:
         return result or {}
     
     def set_dac(self, value: int) -> Dict[str, Any]:
-        assert 0 <= value <= 0xFFFF, "value must be between 0 and 0xFFFF"
+        assert 0 <= value <= 1024, "value must be between 0 and 0xFFFF"
         cmd = f"DAC SET {value}"
         return self._req(cmd)
     
@@ -71,12 +71,12 @@ class TesController:
         cmd = f"TES {self.channel} SET {current_mA}"
         return self._req(cmd)
     
-    def inc_current(self, delta: int) -> Dict[str, Any]:
-        cmd = f"TES {self.channel} INC {delta}"
+    def inc_current(self, delta_mA: int) -> Dict[str, Any]:
+        cmd = f"TES {self.channel} INC {delta_mA}"
         return self._req(cmd)
 
-    def dec_current(self, delta: int) -> Dict[str, Any]:
-        cmd = f"TES {self.channel} DEC {delta}"
+    def dec_current(self, delta_mA: int) -> Dict[str, Any]:
+        cmd = f"TES {self.channel} DEC {delta_mA}"
         return self._req(cmd)
 
     def set_bits(self, value: int) -> Dict[str, Any]:
@@ -154,6 +154,18 @@ class LnaController:
         self._check_target(target)
         cmd = f"LNA {self.channel} {target} SET {value}"
         return self._req(cmd)
+    
+    def set_voltage(self, target: str, voltage_V: float) -> Dict[str, Any]:
+        assert 0.0 <= voltage_V <= 5.0, "voltage must be between 0.0 and 5.0V"
+        self._check_target(target)
+        cmd = f"LNA {self.channel} {target} SETV {voltage_V}"
+        return self._req(cmd)
+    
+    def set_current(self, target: str, current_mA: float) -> Dict[str, Any]:
+        assert 0.0 <= current_mA <= 64.0, "current must be between 0.0 and 64.0 mA"
+        self._check_target(target)
+        cmd = f"LNA {self.channel} {target} SETMA {current_mA}"
+        return self._req(cmd)
 
     def get_all(self, target: str) -> Dict[str, Any]:
         self._check_target(target)
@@ -161,7 +173,7 @@ class LnaController:
         return self._req(cmd)
 
     def get_shunt(self, target: str) -> Dict[str, Any]:
-        self.channel._check_target(target)
+        self._check_target(target)
         cmd = f"LNA {self.channel} {target} SHUNT"
         return self._req(cmd)
 

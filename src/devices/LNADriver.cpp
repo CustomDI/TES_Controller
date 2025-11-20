@@ -136,7 +136,6 @@ uint8_t LNADriver::getDrainShuntVoltage_mV(float& shuntVoltage) {
 uint8_t LNADriver::getDrainBusVoltage_V(float& busVoltage) {
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_lnaInaDrain.getBusVoltage_V(busVoltage));
-    busVoltage = -busVoltage; // Drain voltage is negative
     return disconnect();
 }
 
@@ -161,6 +160,7 @@ uint8_t LNADriver::getGateShuntVoltage_mV(float& shuntVoltage) {
 uint8_t LNADriver::getGateBusVoltage_V(float& busVoltage) {
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_lnaInaGate.getBusVoltage_V(busVoltage));
+    busVoltage = -busVoltage; // Drain voltage is negative
     return disconnect();
 }
 

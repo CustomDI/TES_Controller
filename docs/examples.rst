@@ -172,6 +172,12 @@ Configure LNA channels:
            print(f"  GATE: {gate_data}")
            print(f"  DRAIN: {drain_data}")
 
+       # Set GATE voltage in physical units (volts) on channel 1
+       ctrl.lna_set_voltage(channel=1, target='GATE', voltage_V=1.2)
+
+       # Set GATE current (mA) on multiple channels
+       ctrl.lna_set_current(target='GATE', current_mA=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+
 Data Acquisition
 ----------------
 

@@ -1,7 +1,7 @@
 import yaml
 from typing import Optional, Dict, Any, Union, List
 from .serial_client import SerialClient
-from .drivers import TesController, LnaController, DacController
+from .drivers import TesController, LnaController, FluxRampController
 
 class DeviceController:
     """High-level controller that encapsulates SerialClient, TesController and LnaController.
@@ -40,7 +40,7 @@ class DeviceController:
         self.lna: List[LnaController] = [LnaController(self.client, i + 1) for i in range(self.num_lna)]
         
         # DAC controller (single instance, no channel binding)
-        self.dac = DacController(self.client)
+        self.dac = FluxRampController(self.client)
 
     @classmethod
     def from_config(cls, path: str, auto_open: bool = True) -> 'DeviceController':
@@ -70,11 +70,11 @@ class DeviceController:
         self.close()
 
     # ========== DAC Convenience Methods ==========
-    def dac_set(self, value: int) -> Dict[str, Any]:
+    def flux_ramp_set(self, value: int) -> Dict[str, Any]:
         """Set DAC value (0-0xFFFF)."""
         return self.dac.set_dac(value)
 
-    def dac_get(self) -> Dict[str, Any]:
+    def flux_ramp_get(self) -> Dict[str, Any]:
         """Get current DAC value."""
         return self.dac.get_dac()
 
@@ -497,6 +497,91 @@ class DeviceController:
             return [self.lna[ch - 1].set_dac(target, v) for ch, v in zip(channel, value)]
         
         raise ValueError("Invalid combination of channel and value arguments")
+    
+    def lna_set_voltage(self,
+                        channel: Union[int, List[int], None] = None,
+                        target: Union[str, None] = None,
+                        voltage_V: Union[float, List[float], None] = None) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Set LNA voltage for target (0.0-5.0 V).
+        Args:
+            channel: int for single, list for multiple, None for all channels
+            target: 'GATE' or 'DRAIN' (required)
+            voltage_V: float for single value, list for multiple values
+        Returns:
+            Single dict if setting one channel, list of dicts otherwise
+        """
+        if target is None:
+            raise ValueError("target must be provided ('GATE' or 'DRAIN')")
+        if voltage_V is None:
+            raise ValueError("voltage_V must be provided")
+        # Case 1: Single channel, single value
+        if isinstance(channel, int) and not isinstance(voltage_V, list):
+            self._check_lna_channel(channel)
+            return self.lna[channel - 1].set_voltage(target, voltage_V)
+        
+        # Case 2: All channels, single value
+        if channel is None and not isinstance(voltage_V, list):
+            return [self.lna[i].set_voltage(target, voltage_V) for i in range(self.num_lna)]
+        
+        # Case 3: All channels, array of values
+        if channel is None and isinstance(voltage_V, list):
+            if len(voltage_V) != self.num_lna:
+                raise ValueError(f"voltage_V list length {len(voltage_V)} must match num_lna {self.num_lna}")
+            return [self.lna[i].set_voltage(target, voltage_V[i]) for i in range(self.num_lna)]
+        
+        # Case 4: Array of channels, single value
+        if isinstance(channel, list) and not isinstance(voltage_V, list):
+            return [self.lna[ch - 1].set_voltage(target, voltage_V) for ch in channel]
+        
+        # Case 5: Array of channels, array of values
+        if isinstance(channel, list) and isinstance(voltage_V, list):
+            if len(channel) != len(voltage_V):
+                raise ValueError(f"channel and voltage_V lists must have same length")
+            return [self.lna[ch - 1].set_voltage(target, v) for ch, v in zip(channel, voltage_V)]
+        raise ValueError("Invalid combination of channel and voltage_V arguments")
+
+    def lna_set_current(self,
+                        channel: Union[int, List[int], None] = None,
+                        target: Union[str, None] = None,
+                        current_mA: Union[float, List[float], None] = None) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Set LNA current for target (0.0-64.0 mA).
+        Args:
+            channel: int for single, list for multiple, None for all channels
+            target: 'GATE' or 'DRAIN' (required)
+            current_mA: float for single value, list for multiple values
+        Returns:
+            Single dict if setting one channel, list of dicts otherwise
+        """
+        if target is None:
+            raise ValueError("target must be provided ('GATE' or 'DRAIN')")
+        if current_mA is None:
+            raise ValueError("current_mA must be provided")
+        # Case 1: Single channel, single value
+        if isinstance(channel, int) and not isinstance(current_mA, list):
+            self._check_lna_channel(channel)
+            return self.lna[channel - 1].set_current(target, current_mA)
+        
+        # Case 2: All channels, single value
+        if channel is None and not isinstance(current_mA, list):
+            return [self.lna[i].set_current(target, current_mA) for i in range(self.num_lna)]
+        
+        # Case 3: All channels, array of values
+        if channel is None and isinstance(current_mA, list):
+            if len(current_mA) != self.num_lna:
+                raise ValueError(f"current_mA list length {len(current_mA)} must match num_lna {self.num_lna}")
+            return [self.lna[i].set_current(target, current_mA[i]) for i in range(self.num_lna)]
+        
+        # Case 4: Array of channels, single value
+        if isinstance(channel, list) and not isinstance(current_mA, list):
+            return [self.lna[ch - 1].set_current(target, current_mA) for ch in channel]
+        
+        # Case 5: Array of channels, array of values
+        if isinstance(channel, list) and isinstance(current_mA, list):
+            if len(channel) != len(current_mA):
+                raise ValueError(f"channel and current_mA lists must have same length")
+            return [self.lna[ch - 1].set_current(target, curr) for ch, curr in zip(channel, current_mA)]
+        
+        raise ValueError("Invalid combination of channel and current_mA arguments")
 
     def lna_get_shunt(self, 
                      channel: Union[int, List[int], None] = None,

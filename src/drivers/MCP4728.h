@@ -15,7 +15,7 @@ public:
     uint8_t begin();
 
     // Write to a specific DAC channel (A, B, C, D)
-    uint8_t writeDAC(MCP4728_channel_t channel, uint16_t value);
+    uint8_t writeDAC(MCP4728_channel_t channel, uint16_t value, bool useVDD = true);
     // Read the current value of a specific DAC channel (A, B, C, D)
     uint8_t readDAC(MCP4728_channel_t channel, uint16_t &value);
 

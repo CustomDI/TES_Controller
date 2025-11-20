@@ -62,6 +62,9 @@ constexpr auto lnaVoltageArg =
 constexpr auto dacValueArg =
     ARG(ArgType::Int, 0, 4095, "VALUE");
 
+constexpr auto mainDacValueArg =
+    ARG(ArgType::Int, 0, 1024, "VALUE");
+
 constexpr auto tesTCAArg = 
     ARG(ArgType::Int, 0, 0xFFFFF, "BITS"); // 20 bits for TES TCA
 
@@ -138,7 +141,7 @@ Command tesCommands[] = {
 };
 
 Command dacCommands[] = {
-    COMMAND(cmdDACSet, "SET", dacValueArg, nullptr, "Set Main DAC Value"),
+    COMMAND(cmdDACSet, "SET", mainDacValueArg, nullptr, "Set Main DAC Value"),
     COMMAND(cmdDACGet, "GET", nullptr, "Get Main DAC Value"),
 };
 
@@ -307,7 +310,8 @@ void cmdDACSet(SerialCommands& sender, Args& args) {
     uint16_t value = args[0].getInt();
     uint8_t status;
     // Implement setting main DAC value
-    status = mainDac.writeDAC(MCP4728_CHANNEL_A, value);
+
+    status = mainDac.writeDAC(MCP4728_CHANNEL_A, value + 1500, false);
     if (reportIfError(sender, status, "DAC_SET_ERROR", "Failed to set main DAC value.")) {
         return;
     }
@@ -600,28 +604,28 @@ void cmdLNADisable(SerialCommands& sender, Args& args) {
     uint8_t status;
     if (strcmp(target, "DRAIN") == 0) {
         status = lnaDriver[channel]->setDrainEnable(enable);
-        if (reportIfError(sender, status, "LNA_DRAIN_ENABLE_ERROR", "Failed to enable Drain.")) {
+        if (reportIfError(sender, status, "LNA_DRAIN_DISABLE_ERROR", "Failed to enable Drain.")) {
             return;
         }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
-        printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
+        printYAMLKeyValue(out, "command", "LNA_DISABLE", 2, true);
         printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
         printYAMLKeyValue(out, "target", "DRAIN", 2, true);
         printYAMLKeyValue(out, "enabled", String("true"), 2, false);
-        printYAMLMessage(out, "Drain enabled");
+        printYAMLMessage(out, "Drain disabled");
     } else if (strcmp(target, "GATE") == 0) {
         status = lnaDriver[channel]->setGateEnable(enable);
-        if (reportIfError(sender, status, "LNA_GATE_ENABLE_ERROR", "Failed to enable Gate.")) {
+        if (reportIfError(sender, status, "LNA_GATE_DISABLE_ERROR", "Failed to enable Gate.")) {
             return;
         }
         Stream &out = sender.getSerial();
         printYAMLHeader(out, "ok");
-        printYAMLKeyValue(out, "command", "LNA_ENABLE", 2, true);
+        printYAMLKeyValue(out, "command", "LNA_DISABLE", 2, true);
         printYAMLKeyValue(out, "channel", String(channel + 1), 2, false);
         printYAMLKeyValue(out, "target", "GATE", 2, true);
         printYAMLKeyValue(out, "enabled", String("true"), 2, false);
-        printYAMLMessage(out, "Gate enabled");
+        printYAMLMessage(out, "Gate disabled");
     } else {
         reportError(sender, "Invalid target. Use DRAIN or GATE.", "Invalid target");
     }

@@ -91,6 +91,41 @@ ctrl.lna_enable(target='GATE')  # All channels
 ctrl.lna_disable(channel=1, target='DRAIN')
 ```
 
+Note on physical units and polarity
+----------------------------------
+
+`lna_set_dac` accepts either raw DAC integers (0-0xFFFF) or numeric physical values (floats) representing voltages or currents; the driver converts them to DAC codes. When using the ``GATE`` target, pass positive values — the driver will apply the correct negative polarity to the hardware.
+
+Quick examples
+--------------
+
+```python
+# Raw DAC code
+ctrl.lna_set_dac(channel=1, target='GATE', value=0x8000)
+
+# Physical value (volts or mA depending on driver)
+ctrl.lna_set_dac(channel=1, target='GATE', value=1.2)
+
+# Multiple channels, different values
+ctrl.lna_set_dac(target='GATE', value=[1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
+```
+
+Additional LNA setters
+----------------------
+
+The `DeviceController` also exposes convenience setters that accept physical units:
+
+```python
+# Set voltage (volts) on channel 1
+ctrl.lna_set_voltage(channel=1, target='GATE', voltage_V=1.2)
+
+# Set current (mA) on multiple channels
+ctrl.lna_set_current(target='GATE', current_mA=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+```
+
+These wrappers call `LnaController.set_voltage(...)` and `LnaController.set_current(...)` for
+the bound per-channel controllers.
+
 ## DAC Operations
 
 ```python

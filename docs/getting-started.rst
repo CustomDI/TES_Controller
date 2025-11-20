@@ -181,6 +181,65 @@ Setting DAC Values
        value=[0x4000, 0x6000, 0x8000]
    )
 
+Physical units and gate polarity
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The LNA driver has been extended to accept physical quantities in addition to raw DAC codes. You can pass either an integer DAC code (0-0xFFFF) or a numeric physical value (float) that represents a voltage or current; the driver performs the conversion to DAC units internally.
+
+When specifying values for the ``GATE`` target, pass them as positive numbers (for example, ``1.2`` to indicate 1.2 V or 1.2 mA depending on the driver mode). The driver will map these positive inputs to the correct negative polarity required by the hardware. This means you always pass positive numbers in code even though the actual gate voltages/currents applied to the device will be negative.
+
+Examples
+~~~~~~~~
+
+The following examples show the different ways to call ``lna_set_dac``:
+
+.. code-block:: python
+
+   # 1) Raw DAC code (integer)
+   # Set GATE DAC on channel 1 to raw code 0x8000
+   ctrl.lna_set_dac(channel=1, target='GATE', value=0x8000)
+
+   # 2) Physical voltage (float)
+   # Set GATE to 1.2 V (driver converts to DAC code and applies negative polarity)
+   ctrl.lna_set_dac(channel=1, target='GATE', value=1.2)
+
+   # 3) Physical current (float) for multiple channels
+   # Provide a list of currents for channels 1..6 (must match num_lna)
+   currents_mA = [0.5, 1.0, 1.5, 2.0, 2.5, 3.0]
+   ctrl.lna_set_dac(target='GATE', value=currents_mA)
+
+   # 4) Specific channels with different physical values
+   ctrl.lna_set_dac(channel=[1,3], target='GATE', value=[1.2, 0.8])
+
+Notes:
+
+- The driver will accept either integer DAC codes or numeric physical values (floats).
+- For float values, the interpretation (volts vs milliamps) depends on the driver configuration/conversion; consult your hardware-specific settings.
+- Always provide positive numbers for ``GATE`` values — the driver inverts polarity as needed when applying to the hardware.
+
+LNA convenience setters
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to the raw `lna_set_dac(...)` interface, the high-level `DeviceController`
+exposes convenience wrappers that accept physical units and forward to the per-channel
+`LnaController` methods:
+
+- ``lna_set_voltage(channel, target, voltage_V)`` — accepts a single float or list of floats
+   in volts (0.0–5.0 V) and applies the corresponding DAC setting for the selected channel(s).
+- ``lna_set_current(channel, target, current_mA)`` — accepts a single float or list of floats
+   in milliamps (0.0–64.0 mA) and applies the corresponding DAC setting for the selected channel(s).
+
+These convenience methods are implemented on `DeviceController` and simply call the
+bound `LnaController.set_voltage(...)` / `LnaController.set_current(...)` methods.
+
+Developer note
+--------------
+
+While updating the docs I found a small driver bug: `LnaController.get_shunt` previously called
+``self.channel._check_target(target)`` which is incorrect and will raise an attribute error; it
+should call ``self._check_target(target)``. The codebase in this repository has been updated to
+fix that call. This does not change the public API but is important for internal correctness.
+
 Enable/Disable
 ~~~~~~~~~~~~~~
 

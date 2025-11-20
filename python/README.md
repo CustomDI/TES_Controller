@@ -97,6 +97,46 @@ with DeviceController.from_config('config.yaml') as ctrl:
     data = ctrl.lna_get_all(channel=1, target='GATE')
 ```
 
+Note on new LNA DAC functionality
+---------------------------------
+
+The LNA driver now supports setting DAC outputs using either raw DAC codes (integers, e.g. 0x8000) or physical quantities (floats) for convenience. When a float is provided the driver will convert the supplied value into the appropriate DAC code (for example a voltage in volts or a current in milliamps) according to the configured conversion in the driver.
+
+Important: when using the `GATE` target, provide the physical current/voltage as a positive number — the driver maps gate values to the correct (negative) polarity applied to the hardware. In other words, pass positive numbers in your code even though the actual gate voltage/current on the device is negative.
+
+Examples
+~~~~~~~~
+
+```python
+# Using a raw DAC code (integer)
+ctrl.lna_set_dac(channel=1, target='GATE', value=0x8000)
+
+# Using a physical voltage (float) - driver converts and applies negative polarity
+ctrl.lna_set_dac(channel=1, target='GATE', value=1.2)  # 1.2 V (passed positive)
+
+# Set multiple channels to different physical values (list length must equal num_lna)
+ctrl.lna_set_dac(target='GATE', value=[1.0, 1.1, 1.2, 1.3, 1.4, 1.5])
+
+# Set specific channels to the same physical value
+ctrl.lna_set_dac(channel=[1,3,5], target='GATE', value=0.8)
+```
+
+LNA voltage/current convenience methods
+---------------------------------------
+
+In addition to `lna_set_dac(...)`, the `DeviceController` exposes convenience methods that accept
+physical units and route to the underlying per-channel driver methods:
+
+- `lna_set_voltage(channel, target, voltage_V)` — accepts a float (or list of floats) in volts (0.0–5.0 V).
+- `lna_set_current(channel, target, current_mA)` — accepts a float (or list of floats) in milliamps (0.0–64.0 mA).
+
+These are available on `DeviceController` and call the corresponding `LnaController.set_voltage(...)`
+and `LnaController.set_current(...)` methods for the bound channel(s).
+
+Developer note: while reviewing the code I noticed a small issue in `LnaController.get_shunt` where it
+incorrectly calls `self.channel._check_target(target)` instead of `self._check_target(target)`. This is a
+minor bug that should be fixed in the driver (it doesn't change the documented API names above).
+
 ## Channel Selection Patterns
 
 The API supports flexible channel selection:
@@ -131,6 +171,9 @@ For more examples, see the [Examples Documentation](https://tes-controller.readt
 **LNA Operations:**
 - `lna_get_all()`, `lna_get_current()`, `lna_get_power()`, `lna_get_shunt()`, `lna_get_bus()`
 - `lna_set_dac()`, `lna_enable()`, `lna_disable()`
+
+Additional LNA setters (convenience wrappers accepting physical units):
+- `lna_set_voltage()`, `lna_set_current()`
 
 **DAC Operations:**
 - `dac_set()`, `dac_get()`

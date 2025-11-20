@@ -10,9 +10,13 @@ uint8_t MCP4728::begin() {
     return 0;
 }
 
-uint8_t MCP4728::writeDAC(MCP4728_channel_t channel, uint16_t value) {
+uint8_t MCP4728::writeDAC(MCP4728_channel_t channel, uint16_t value, bool useVDD) {
     value = value & 0x0FFF; // Ensure value is 12-bit
-    return mcp.setChannelValue(channel, value) == true ? 0 : 1;
+    if (useVDD) {
+        return mcp.setChannelValue(channel, value) == true ? 0 : 1;
+    } else {
+        return mcp.setChannelValue(channel, value, MCP4728_VREF_INTERNAL) == true ? 0 : 1;
+    }
 }
 
 uint8_t MCP4728::readDAC(MCP4728_channel_t channel, uint16_t& value) {
