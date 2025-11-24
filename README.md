@@ -51,7 +51,7 @@ Keys and numeric ranges mentioned below mirror the firmware exactly.
 |-----------|-----------------|---------|
 | `HELP` | `HELP` | List every available command and subcommand. |
 | `DAC`  | `DAC <SUBCOMMAND> [...]` | Control the base flux-ramp DAC. |
-| `LNA`  | `LNA <channel> <GATE|DRAIN> <SUBCOMMAND> [...]` | Inspect or tune LNA DACs and telemetry. |
+| `LNA`  | `LNA <channel> <GATE\|DRAIN> <SUBCOMMAND> [...]` | Inspect or tune LNA DACs and telemetry. |
 | `TES`  | `TES <channel> <SUBCOMMAND> [...]` | Inspect or tune TES drive outputs and telemetry. |
 
 The sections below expand each subcommand, including argument ranges and the
@@ -73,7 +73,7 @@ Top-level syntax: `DAC <SUBCOMMAND> [...]`
 
 | Subcommand | Syntax | Description | Response keys |
 |------------|--------|-------------|----------------|
-| `SET` | `DAC SET <value>` | Write channel A of the MCP4728 flux-ramp DAC. Valid `value` range is `0` – `1024`; the firmware applies an internal offset before writing to the hardware. | `command: "DAC_SET"`, `value` (echo), `message` |
+| `SET` | `DAC SET <value>` | Write channel A of the MCP4728 flux-ramp DAC. Valid `value` range is `0` – `1024`; this value is offset to a valid range. | `command: "DAC_SET"`, `value` (echo), `message` |
 | `GET` | `DAC GET` | Read the current value programmed into channel A. | `command: "DAC_GET"`, `value`, `message` |
 
 ## LNA Commands
