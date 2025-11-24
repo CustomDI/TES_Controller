@@ -1,371 +1,223 @@
 Examples
 ========
 
-This page contains complete, working examples of the TES Controller API.
+The snippets below illustrate complete, runnable patterns built on top of the
+high-level :class:`tes_controller.controller.DeviceController` API.
 
 Basic Example
 -------------
-
-Simple single-channel operations:
 
 .. code-block:: python
 
    from tes_controller import DeviceController
    from tes_controller.drivers import CommandError
 
-   with DeviceController.from_config('config.yaml') as ctrl:
+   with DeviceController.from_config('python/config.yaml') as ctrl:
        try:
-           # Get channel 1 data
-           data = ctrl.tes_get_all(channel=1)
-           print(f"Channel 1: {data}")
-           
-           # Set current
+           reading = ctrl.tes_get_all(channel=1)
+           print(f"Channel 1 state: {reading}")
+
            ctrl.tes_set_current(channel=1, current_mA=5.0)
-           
-           # Enable the channel
            ctrl.tes_enable(channel=1)
-           
-       except CommandError as e:
-           print(f"Error: {e}")
+       except CommandError as exc:
+           print(f"Hardware command failed: {exc}")
 
 Multi-Channel Operations
 ------------------------
-
-Working with multiple channels:
 
 .. code-block:: python
 
    from tes_controller import DeviceController
 
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Get data from all channels
+   with DeviceController.from_config('python/config.yaml') as ctrl:
        all_data = ctrl.tes_get_all()
-       for i, data in enumerate(all_data, 1):
-           print(f"Channel {i}: {data}")
-       
-       # Set same current on all channels
+       for index, data in enumerate(all_data, start=1):
+           print(f"Channel {index}: {data}")
+
        ctrl.tes_set_current(current_mA=5.0)
-       
-       # Set different currents on each channel
-       currents = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
-       ctrl.tes_set_current(current_mA=currents)
-       
-       # Enable specific channels
+
+       ctrl.tes_set_current(
+           current_mA=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0]
+       )
+
        ctrl.tes_enable(channel=[1, 3, 5])
 
 Current Sweep
 -------------
 
-Sweeping current on a single channel:
-
 .. code-block:: python
 
-   from tes_controller import DeviceController
    import time
+   from tes_controller import DeviceController
 
-   with DeviceController.from_config('config.yaml') as ctrl:
+   with DeviceController.from_config('python/config.yaml') as ctrl:
        channel = 1
-       start_mA = 0.0
-       stop_mA = 10.0
-       step_mA = 0.5
-       
-       # Enable channel
-       ctrl.tes_enable(channel=channel)
-       
-       # Set starting current
-       ctrl.tes_set_current(channel=channel, current_mA=start_mA)
-       time.sleep(0.1)
-       
-       # Sweep current
-       current = start_mA
-       while current <= stop_mA:
-           # Set current
-           ctrl.tes_set_current(channel=channel, current_mA=current)
-           time.sleep(0.05)
-           
-           # Read back measurements
-           data = ctrl.tes_get_current(channel=channel)
-           power = ctrl.tes_get_power(channel=channel)
-           
-           print(f"Current: {current:.2f} mA, "
-                 f"Measured: {data.get('current_mA', 'N/A')} mA, "
-                 f"Power: {power.get('power_mW', 'N/A')} mW")
-           
-           current += step_mA
-       
-       # Disable channel
-       ctrl.tes_disable(channel=channel)
+       for target in [0.5, 1.0, 1.5, 2.0, 2.5]:
+           ctrl.tes_set_current(channel=channel, current_mA=target)
+           time.sleep(0.1)
+           readback = ctrl.tes_get_current(channel=channel)
+           print(f"Commanded {target:.2f} mA -> {readback.get('current_mA', 'N/A')} mA")
 
 Batch Configuration
 -------------------
 
-Configure multiple channels with different settings:
-
 .. code-block:: python
 
    from tes_controller import DeviceController
 
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Configuration for each channel
-       config = {
-           1: {'current_mA': 5.0, 'enabled': True},
-           2: {'current_mA': 3.5, 'enabled': True},
-           3: {'current_mA': 4.2, 'enabled': False},
-           4: {'current_mA': 6.1, 'enabled': True},
-           5: {'current_mA': 2.8, 'enabled': True},
-           6: {'current_mA': 5.5, 'enabled': False},
-       }
-       
-       # Apply configuration
-       for channel, settings in config.items():
-           # Set current
-           ctrl.tes_set_current(
-               channel=channel,
-               current_mA=settings['current_mA']
-           )
-           
-           # Enable or disable
-           if settings['enabled']:
+   configuration = {
+       1: {"current_mA": 5.0, "enabled": True},
+       2: {"current_mA": 3.5, "enabled": True},
+       3: {"current_mA": 4.2, "enabled": False},
+       4: {"current_mA": 6.1, "enabled": True},
+       5: {"current_mA": 2.8, "enabled": True},
+       6: {"current_mA": 5.5, "enabled": False},
+   }
+
+   with DeviceController.from_config('python/config.yaml') as ctrl:
+       for channel, settings in configuration.items():
+           ctrl.tes_set_current(channel=channel, current_mA=settings["current_mA"])
+           if settings["enabled"]:
                ctrl.tes_enable(channel=channel)
            else:
                ctrl.tes_disable(channel=channel)
-       
-       # Verify configuration
-       print("\nVerifying configuration:")
-       for channel in config.keys():
-           data = ctrl.tes_get_all(channel=channel)
-           print(f"Channel {channel}: {data}")
+
+       for channel in configuration:
+           print(f"Channel {channel}: {ctrl.tes_get_all(channel=channel)}")
 
 LNA Configuration
 -----------------
 
-Configure LNA channels:
+.. code-block:: python
+
+   from tes_controller import DeviceController
+
+   with DeviceController.from_config('python/config.yaml') as ctrl:
+       ctrl.lna_set_dac(target='GATE', value=[0x4000, 0x4500, 0x5000, 0x5500, 0x6000, 0x6500])
+       ctrl.lna_set_dac(channel=[1, 2, 3], target='DRAIN', value=0x8000)
+
+       ctrl.lna_enable(target='GATE')
+       ctrl.lna_enable(channel=[1, 2, 3], target='DRAIN')
+
+       for channel in range(1, 7):
+           gate = ctrl.lna_get_all(channel=channel, target='GATE')
+           drain = ctrl.lna_get_all(channel=channel, target='DRAIN')
+           print(f"Channel {channel}: gate={gate} drain={drain}")
+
+       ctrl.lna_set_voltage(channel=1, target='GATE', voltage_V=1.2)
+       ctrl.lna_set_current(target='GATE', current_mA=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+
+Flux Ramp DAC
+-------------
 
 .. code-block:: python
 
    from tes_controller import DeviceController
 
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Set GATE voltages on all channels
-       gate_values = [0x4000, 0x4500, 0x5000, 0x5500, 0x6000, 0x6500]
-       ctrl.lna_set_dac(target='GATE', value=gate_values)
-       
-       # Set DRAIN voltage on specific channels
-       ctrl.lna_set_dac(
-           channel=[1, 2, 3],
-           target='DRAIN',
-           value=0x8000
-       )
-       
-       # Enable all GATE channels
-       ctrl.lna_enable(target='GATE')
-       
-       # Enable DRAIN on specific channels
-       ctrl.lna_enable(channel=[1, 2, 3], target='DRAIN')
-       
-       # Read back configuration
-       print("\nLNA Configuration:")
-       for i in range(1, 7):
-           gate_data = ctrl.lna_get_all(channel=i, target='GATE')
-           drain_data = ctrl.lna_get_all(channel=i, target='DRAIN')
-           print(f"Channel {i}:")
-           print(f"  GATE: {gate_data}")
-           print(f"  DRAIN: {drain_data}")
-
-       # Set GATE voltage in physical units (volts) on channel 1
-       ctrl.lna_set_voltage(channel=1, target='GATE', voltage_V=1.2)
-
-       # Set GATE current (mA) on multiple channels
-       ctrl.lna_set_current(target='GATE', current_mA=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0])
+   with DeviceController.from_config('python/config.yaml') as ctrl:
+       ctrl.flux_ramp_set(0x8000)
+       print(ctrl.flux_ramp_get())
 
 Data Acquisition
 ----------------
 
-Continuous data acquisition from all channels:
-
 .. code-block:: python
 
-   from tes_controller import DeviceController
-   import time
    import csv
+   import time
+   from tes_controller import DeviceController
 
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Setup
-       ctrl.tes_enable()  # Enable all channels
-       ctrl.tes_set_current(current_mA=5.0)  # Set all to 5 mA
-       
-       # Data acquisition
-       duration_sec = 10
+   with DeviceController.from_config('python/config.yaml') as ctrl:
+       ctrl.tes_enable()
+       ctrl.tes_set_current(current_mA=5.0)
+
        sample_rate_hz = 10
+       duration_sec = 5
        interval = 1.0 / sample_rate_hz
-       
-       with open('data.csv', 'w', newline='') as f:
-           writer = csv.writer(f)
-           # Write header
-           header = ['time'] + [f'ch{i}_current' for i in range(1, 7)] + \
-                    [f'ch{i}_power' for i in range(1, 7)]
+
+       with open('tes_data.csv', 'w', newline='') as handle:
+           writer = csv.writer(handle)
+           header = ['time_s']
+           header.extend([f'ch{idx}_current_mA' for idx in range(1, ctrl.num_tes + 1)])
+           header.extend([f'ch{idx}_power_mW' for idx in range(1, ctrl.num_tes + 1)])
            writer.writerow(header)
-           
-           # Acquire data
-           start_time = time.time()
-           while time.time() - start_time < duration_sec:
-               t = time.time() - start_time
-               
-               # Read all channels
+
+           start = time.time()
+           while time.time() - start < duration_sec:
+               elapsed = time.time() - start
                currents = ctrl.tes_get_current()
                powers = ctrl.tes_get_power()
-               
-               # Extract values
-               row = [t]
-               row.extend([c.get('current_mA', 0) for c in currents])
-               row.extend([p.get('power_mW', 0) for p in powers])
-               
+               row = [elapsed]
+               row.extend([entry.get('current_mA', 0.0) for entry in currents])
+               row.extend([entry.get('power_mW', 0.0) for entry in powers])
                writer.writerow(row)
-               
-               # Wait for next sample
                time.sleep(interval)
-       
-       print(f"Data saved to data.csv")
 
-Error Recovery
---------------
-
-Robust error handling and recovery:
+Robust Error Handling
+---------------------
 
 .. code-block:: python
 
+   import time
    from tes_controller import DeviceController
    from tes_controller.drivers import CommandError
-   import time
 
-   def safe_operation(ctrl, channel, target_mA, max_retries=3):
-       """Safely set current with retries."""
-       for attempt in range(max_retries):
+   def safe_set_current(ctrl, channel, current_mA, attempts=3):
+       for attempt in range(1, attempts + 1):
            try:
-               ctrl.tes_set_current(channel=channel, current_mA=target_mA)
-               
-               # Verify
+               ctrl.tes_set_current(channel=channel, current_mA=current_mA)
                time.sleep(0.1)
-               data = ctrl.tes_get_current(channel=channel)
-               measured = data.get('current_mA', 0)
-               
-               if abs(measured - target_mA) < 0.1:
-                   print(f"Channel {channel}: Successfully set to {target_mA} mA")
-                   return True
-               else:
-                   print(f"Channel {channel}: Verification failed "
-                         f"(target={target_mA}, measured={measured})")
-                   
-           except CommandError as e:
-               print(f"Channel {channel}: Attempt {attempt + 1} failed: {e}")
-               if attempt < max_retries - 1:
-                   time.sleep(0.5)
-       
-       print(f"Channel {channel}: Failed after {max_retries} attempts")
+               actual = ctrl.tes_get_current(channel=channel)
+               print(f"Channel {channel}: target {current_mA} mA -> actual {actual.get('current_mA', 'N/A')} mA")
+               return True
+           except CommandError as exc:
+               print(f"Attempt {attempt}/{attempts} failed: {exc}")
        return False
 
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Try to set currents with error recovery
-       for channel in range(1, 7):
-           safe_operation(ctrl, channel, target_mA=5.0)
+   with DeviceController.from_config('python/config.yaml') as ctrl:
+       for channel in range(1, ctrl.num_tes + 1):
+           safe_set_current(ctrl, channel, current_mA=5.0)
 
-Using Direct Controller Access
--------------------------------
-
-For intensive operations on a single channel:
+Complete Workflow Script
+------------------------
 
 .. code-block:: python
 
-   from tes_controller import DeviceController
+   import argparse
    import time
-
-   with DeviceController.from_config('config.yaml') as ctrl:
-       # Get direct access to channel 1 controller
-       tes1 = ctrl.get_tes_controller(channel=1)
-       
-       # No need to specify channel repeatedly
-       tes1.enable()
-       tes1.set_current(current_mA=1.0)
-       
-       # Incremental adjustment
-       for i in range(100):
-           tes1.inc_current(delta=10)
-           time.sleep(0.01)
-           
-           if i % 10 == 0:
-               data = tes1.get_current()
-               print(f"Step {i}: {data}")
-       
-       tes1.disable()
-
-Complete Application Example
------------------------------
-
-A complete application with initialization, operation, and cleanup:
-
-.. code-block:: python
-
    from tes_controller import DeviceController
    from tes_controller.drivers import CommandError
-   import time
-   import argparse
 
-   def initialize_system(ctrl):
-       """Initialize all channels to safe state."""
-       print("Initializing system...")
-       
-       # Disable all channels
+   def initialize(ctrl):
        ctrl.tes_disable()
+       ctrl.tes_set_current(current_mA=0.0)
        ctrl.lna_disable(target='GATE')
        ctrl.lna_disable(target='DRAIN')
-       
-       # Set safe defaults
-       ctrl.tes_set_current(current_mA=0.0)
        ctrl.lna_set_dac(target='GATE', value=0x0000)
        ctrl.lna_set_dac(target='DRAIN', value=0x0000)
-       
-       print("System initialized")
 
-   def run_measurement(ctrl, config):
-       """Run measurement with given configuration."""
-       print(f"Running measurement with config: {config}")
-       
-       # Apply TES configuration
-       ctrl.tes_set_current(current_mA=config['tes_current'])
-       ctrl.tes_enable(channel=config['tes_channels'])
-       
-       # Apply LNA configuration
-       ctrl.lna_set_dac(target='GATE', value=config['lna_gate'])
+   def run_profile(ctrl, profile):
+       ctrl.tes_set_current(current_mA=profile['tes_current'])
+       ctrl.tes_enable(channel=profile['tes_channels'])
+       ctrl.lna_set_dac(target='GATE', value=profile['lna_gate'])
        ctrl.lna_enable(target='GATE')
-       
-       # Wait for settling
-       time.sleep(config.get('settling_time', 1.0))
-       
-       # Acquire data
-       data = ctrl.tes_get_all()
-       return data
+       time.sleep(profile.get('settling_time', 1.0))
+       return ctrl.tes_get_all()
 
-   def shutdown_system(ctrl):
-       """Safely shutdown the system."""
-       print("Shutting down system...")
+   def shutdown(ctrl):
        ctrl.tes_disable()
        ctrl.lna_disable(target='GATE')
        ctrl.lna_disable(target='DRAIN')
-       print("System shutdown complete")
 
    def main():
-       parser = argparse.ArgumentParser(description='TES Controller Application')
-       parser.add_argument('--config', default='config.yaml',
-                          help='Configuration file path')
+       parser = argparse.ArgumentParser(description='TES Controller workflow')
+       parser.add_argument('--config', default='python/config.yaml')
        args = parser.parse_args()
-       
+
        try:
            with DeviceController.from_config(args.config) as ctrl:
-               # Initialize
-               initialize_system(ctrl)
-               
-               # Run measurements
-               configs = [
+               initialize(ctrl)
+               profiles = [
                    {
                        'tes_current': 5.0,
                        'tes_channels': [1, 2, 3],
@@ -379,19 +231,17 @@ A complete application with initialization, operation, and cleanup:
                        'settling_time': 1.0,
                    },
                ]
-               
-               for i, config in enumerate(configs, 1):
-                   print(f"\n=== Measurement {i}/{len(configs)} ===")
-                   data = run_measurement(ctrl, config)
-                   print(f"Results: {data}")
-               
-               # Shutdown
-               shutdown_system(ctrl)
-               
-       except CommandError as e:
-           print(f"Command error: {e}")
-       except Exception as e:
-           print(f"Unexpected error: {e}")
+
+               for index, profile in enumerate(profiles, start=1):
+                   print(f"\n=== Profile {index}/{len(profiles)} ===")
+                   result = run_profile(ctrl, profile)
+                   print(result)
+
+               shutdown(ctrl)
+       except CommandError as exc:
+           print(f"Hardware error: {exc}")
+       except Exception as exc:
+           print(f"Unexpected error: {exc}")
 
    if __name__ == '__main__':
        main()

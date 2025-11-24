@@ -1,52 +1,39 @@
 API Reference
 =============
 
-This page contains the complete API reference for the TES Controller.
+Top-level Package
+-----------------
 
-DeviceController
-----------------
+.. automodule:: tes_controller
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Device Controller
+-----------------
+
+.. automodule:: tes_controller.controller
+   :members:
+   :undoc-members:
+   :show-inheritance:
+   :exclude-members: DeviceController
 
 .. autoclass:: tes_controller.controller.DeviceController
    :members:
+   :show-inheritance:
+
+Drivers
+-------
+
+.. automodule:: tes_controller.drivers
+   :members:
    :undoc-members:
    :show-inheritance:
 
-TesController
+Serial Client
 -------------
 
-.. autoclass:: tes_controller.drivers.TesController
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-LnaController
--------------
-
-.. autoclass:: tes_controller.drivers.LnaController
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-DacController
--------------
-
-.. autoclass:: tes_controller.drivers.DacController
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-SerialClient
-------------
-
-.. autoclass:: tes_controller.serial_client.SerialClient
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Exceptions
-----------
-
-.. autoclass:: tes_controller.drivers.CommandError
+.. automodule:: tes_controller.serial_client
    :members:
    :undoc-members:
    :show-inheritance:

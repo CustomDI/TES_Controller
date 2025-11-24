@@ -4,7 +4,7 @@ Installation
 Requirements
 ------------
 
-- Python 3.7+
+- Python 3.8 or newer
 - Serial port access for hardware communication
 
 Install from Source
@@ -14,24 +14,20 @@ Install from Source
 
 .. code-block:: bash
 
-   git clone https://github.com/pahorton/TES_Controller.git
-   cd TES_Controller/python
+   git clone https://github.com/CustomDI/TES_Controller.git
+   cd TES_Controller
 
-2. Install the required dependencies:
+2. Install the runtime dependencies:
 
 .. code-block:: bash
 
-   pip install -r requirements.txt
+   pip install -r python/requirements.txt
 
-Dependencies
-------------
+3. (Optional) Install the documentation toolchain:
 
-The TES Controller requires the following Python packages:
+.. code-block:: bash
 
-- ``pyserial`` - For serial communication
-- ``pyyaml`` - For configuration file parsing
-
-These are automatically installed when you run ``pip install -r requirements.txt``.
+   pip install -r docs/requirements.txt
 
 Configuration
 -------------
@@ -40,9 +36,9 @@ Configuration
 
 .. code-block:: bash
 
-   cp config_example.yaml config.yaml
+   cp python/config_example.yaml python/config.yaml
 
-2. Edit ``config.yaml`` with your serial port settings:
+2. Edit ``python/config.yaml`` with your serial port settings:
 
 .. code-block:: yaml
 
@@ -52,18 +48,13 @@ Configuration
    num_tes: 6
    num_lna: 6
 
-Serial Port Configuration
---------------------------
+Serial Port Notes
+-----------------
 
 macOS
 ~~~~~
 
-Serial ports are typically named:
-
-- ``/dev/tty.usbmodem*`` - USB CDC devices
-- ``/dev/tty.usbserial*`` - USB serial adapters
-
-To find your device:
+Serial ports typically appear as ``/dev/tty.usbmodem*`` or ``/dev/tty.usbserial*``. To list devices:
 
 .. code-block:: bash
 
@@ -72,37 +63,31 @@ To find your device:
 Linux
 ~~~~~
 
-Serial ports are typically named:
-
-- ``/dev/ttyACM0`` - USB CDC devices
-- ``/dev/ttyUSB0`` - USB serial adapters
-
-To find your device:
+Common serial devices are ``/dev/ttyACM0`` and ``/dev/ttyUSB0``. To list them:
 
 .. code-block:: bash
 
-   ls /dev/tty*
+   ls /dev/ttyACM* /dev/ttyUSB*
 
-You may need to add your user to the ``dialout`` group:
+If required, add your user to the ``dialout`` group and log out/in:
 
 .. code-block:: bash
 
-   sudo usermod -a -G dialout $USER
+   sudo usermod -a -G dialout "$USER"
 
 Windows
 ~~~~~~~
 
-Serial ports are named ``COM1``, ``COM2``, etc.
-
-Check Device Manager to find the correct COM port number.
+Serial ports are named ``COM1``, ``COM2`` and so on. Check the Device Manager to find the active COM port.
 
 Verifying Installation
------------------------
+----------------------
 
-Run the example script to verify your installation:
+Run the bundled example to confirm connectivity:
 
 .. code-block:: bash
 
+   cd python
    python example.py
 
-If successful, you should see output from your connected TES/LNA hardware.
+If the port is configured correctly, you should see YAML responses echoed to the console.
