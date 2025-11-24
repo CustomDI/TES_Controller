@@ -51,7 +51,7 @@ Keys and numeric ranges mentioned below mirror the firmware exactly.
 |-----------|-----------------|---------|
 | `HELP` | `HELP` | List every available command and subcommand. |
 | `DAC`  | `DAC <SUBCOMMAND> [...]` | Control the base flux-ramp DAC. |
-| `LNA`  | `LNA <channel> <GATE|DRAIN> <SUBCOMMAND> [...]` | Inspect or tune LNA DACs and telemetry. |
+| `LNA`  | `LNA <channel> <GATE\|DRAIN> <SUBCOMMAND> [...]` | Inspect or tune LNA DACs and telemetry. |
 | `TES`  | `TES <channel> <SUBCOMMAND> [...]` | Inspect or tune TES drive outputs and telemetry. |
 
 The sections below expand each subcommand, including argument ranges and the
