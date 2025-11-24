@@ -73,7 +73,7 @@ Top-level syntax: `DAC <SUBCOMMAND> [...]`
 
 | Subcommand | Syntax | Description | Response keys |
 |------------|--------|-------------|----------------|
-| `SET` | `DAC SET <value>` | Write channel A of the MCP4728 flux-ramp DAC. Valid `value` range is `0` – `1024`; the firmware applies an internal offset before writing to the hardware. | `command: "DAC_SET"`, `value` (echo), `message` |
+| `SET` | `DAC SET <value>` | Write channel A of the MCP4728 flux-ramp DAC. Valid `value` range is `0` – `1024`; this value is offset to a valid range. | `command: "DAC_SET"`, `value` (echo), `message` |
 | `GET` | `DAC GET` | Read the current value programmed into channel A. | `command: "DAC_GET"`, `value`, `message` |
 
 ## LNA Commands
