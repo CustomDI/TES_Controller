@@ -15,6 +15,7 @@ The TES Controller is a Python interface for controlling Transition Edge Sensor
    usage
    examples
    api
+   hardware-guide
 
 Key Features
 ------------
