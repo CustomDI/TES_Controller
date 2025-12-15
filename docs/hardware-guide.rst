@@ -3,7 +3,7 @@ Hardware Guide
 
 This guide outlines the PCBs, hardware, and assembly of the 
 TES Bias System. The production files for the enclosure can be 
-found in the `route directory <https://github.com/CustomDI/TES_Controller>`__.
+found in the `Production_Files directory <https://github.com/CustomDI/TES_Controller/Production_Files>`__.
 
 Printed Circuit Boards (PCBs)
 -----------------------------
