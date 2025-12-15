@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hardware Guide &mdash; TES Controller 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="API Reference" href="api.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            TES Controller
+          </a>
+              <div class="version">
+                1.0.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#install-from-source">Install from Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#configuration">Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#serial-port-notes">Serial Port Notes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#macos">macOS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-installation">Verifying Installation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#creating-a-controller">Creating a Controller</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#from-a-configuration-file">From a configuration file</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#direct-instantiation">Direct instantiation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#using-context-managers">Using Context Managers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#channel-selection-patterns">Channel Selection Patterns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#single-channel">Single channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#multiple-specific-channels">Multiple specific channels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#all-channels">All channels</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#per-channel-values">Per-channel values</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#tes-operations">TES Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#getters">Getters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#setters">Setters</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#enable-disable">Enable/Disable</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#lna-operations">LNA Operations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#target-selection">Target selection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#setting-dac-values">Setting DAC values</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#convenience-setters">Convenience setters</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#dac-operations">DAC Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#error-handling">Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#direct-controller-access">Direct Controller Access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#return-types">Return Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#next-steps">Next Steps</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#quick-start">Quick Start</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#configuration-file">Configuration File</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#channel-selection-patterns">Channel Selection Patterns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#frequently-used-helpers">Frequently Used Helpers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#tes-control">TES control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#lna-control">LNA control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#global-dac">Global DAC</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#basic-example">Basic Example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#multi-channel-operations">Multi-Channel Operations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#current-sweep">Current Sweep</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#batch-configuration">Batch Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#lna-configuration">LNA Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#flux-ramp-dac">Flux Ramp DAC</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#data-acquisition">Data Acquisition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#robust-error-handling">Robust Error Handling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#complete-workflow-script">Complete Workflow Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#top-level-package">Top-level Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#device-controller">Device Controller</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#drivers">Drivers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html#serial-client">Serial Client</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Hardware Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#lna-bias-card">LNA Bias Card</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tes-bias-card">TES Bias Card</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#dsub-converter">DSUB Converter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enclosure">Enclosure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#panel-1">Panel 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#panel-2">Panel 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bottom-panel">Bottom Panel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#fully-assembled-enclosure">Fully Assembled Enclosure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-1">Step 1</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-2">Step 2</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#step-3">Step 3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">TES Controller</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Hardware Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/hardware-guide.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="hardware-guide">
+<h1>Hardware Guide<a class="headerlink" href="#hardware-guide" title="Link to this heading"></a></h1>
+<p>This guide shows and describes the PCBs in the TES Bias System,
+as well as a guide on how to assemble the enclosure.</p>
+<section id="lna-bias-card">
+<h2>LNA Bias Card<a class="headerlink" href="#lna-bias-card" title="Link to this heading"></a></h2>
+<p>Note that both bias cards are reversible. They can be placed in a card slot in either direction.
+The LNA Bias card is capable of providing a positive voltage rail (0 to 4.95V)
+for the drain of an LNA and negative voltage rail (-4.95 to 0V) for the gate of an LNA.
+This is sufficient for both the 4K and 50K LNAs.</p>
+<figure class="align-center" id="id1">
+<a class="reference internal image-reference" href="_images/LNA_Bias_Card_side_1.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/LNA_Bias_Card_side_1.png" style="width: 80%;" /></a>
+<figcaption>
+<p><span class="caption-text">LNA Bias Card Side 1.</span><a class="headerlink" href="#id1" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id2">
+<a class="reference internal image-reference" href="_images/LNA_Bias_Card_side_2.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/LNA_Bias_Card_side_2.png" style="width: 80%;" /></a>
+<figcaption>
+<p><span class="caption-text">LNA Bias Card Side 2.</span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="tes-bias-card">
+<h2>TES Bias Card<a class="headerlink" href="#tes-bias-card" title="Link to this heading"></a></h2>
+<p>The TES Bias Card is a 20 bit programmable resistor/voltage divider.
+Side 1 has an array of relays that allow the user to control which resistors
+are included in this programmable voltage divider.
+This provides current steps of 20nA and voltage steps of</p>
+<figure class="align-center" id="id3">
+<a class="reference internal image-reference" href="_images/TES_Bias_Card_side_1.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/TES_Bias_Card_side_1.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">TES Bias Card Side 1.</span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id4">
+<a class="reference internal image-reference" href="_images/TES_Bias_Card_side_2.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/TES_Bias_Card_side_2.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">TES Bias Card Side 2.</span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="dsub-converter">
+<h2>DSUB Converter<a class="headerlink" href="#dsub-converter" title="Link to this heading"></a></h2>
+<figure class="align-center" id="id5">
+<a class="reference internal image-reference" href="_images/dsub_converter.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/dsub_converter.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">DSUB converter board to for the 50K LNA board output. Converts 37 pin DSUB to a 25 pin DSUB.</span><a class="headerlink" href="#id5" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="enclosure">
+<h2>Enclosure<a class="headerlink" href="#enclosure" title="Link to this heading"></a></h2>
+<p>This section details how to assemble the enclosure, including the electronics within.
+It’s important to note that many of these pictures show a mounting plate sitting atop the
+bottom panel - the mounting plate is NOT in the final design. The
+<a class="reference external" href="putlinkhere">production files</a> will include bottom panel files only, no mounting plate.</p>
+<section id="panel-1">
+<h3>Panel 1<a class="headerlink" href="#panel-1" title="Link to this heading"></a></h3>
+<figure class="align-center" id="id6">
+<a class="reference internal image-reference" href="_images/panel_1.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/panel_1.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Panel 1 contains all data ports and a power switch.</span><a class="headerlink" href="#id6" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="panel-2">
+<h3>Panel 2<a class="headerlink" href="#panel-2" title="Link to this heading"></a></h3>
+<figure class="align-center" id="id7">
+<a class="reference internal image-reference" href="_images/panel_2.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/panel_2.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Panel 2 only contains a power switch.</span><a class="headerlink" href="#id7" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="bottom-panel">
+<h3>Bottom Panel<a class="headerlink" href="#bottom-panel" title="Link to this heading"></a></h3>
+<p>The bottom panel should be manufactured with several types of press fit studs
+(see <a class="reference internal" href="#step-1">Step 1</a>):
+M3x6mm, M3x10mm, M3x15mm and M4x10mm. If you want the bottom panel to lay truly flat
+on a surface, countersink the 5 unthreaded M3 holes on the left and right of the panel,
+and use flat head screws instead of pan head screws (M3x4mm). Be sure to countersink from
+the side that does not have the studs sticking out. Reference the pictures below in Step 1
+to determine the location of these holes (10 total). This guide will reference
+the non-countersunk procedure.</p>
+</section>
+<section id="fully-assembled-enclosure">
+<h3>Fully Assembled Enclosure<a class="headerlink" href="#fully-assembled-enclosure" title="Link to this heading"></a></h3>
+<p>The TES Enclosure BOM lists every component needed to create a TES Bias System.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="_images/system_top_down.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/system_top_down.png" style="width: 100%;" /></a>
+</figure>
+</section>
+<section id="step-1">
+<h3>Step 1<a class="headerlink" href="#step-1" title="Link to this heading"></a></h3>
+<div class="line-block">
+<div class="line">Starting with the bottom panel:</div>
+<div class="line">- Place 2mm spacers down onto the M3x10mm and M3x15mm press fit studs.</div>
+<div class="line">- Screw the L-brackets with M3x5mm pan head screws from below.</div>
+</div>
+<figure class="align-center" id="id8">
+<a class="reference internal image-reference" href="_images/step_1.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/step_1.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Top down view of the Bottom Panel.</span><a class="headerlink" href="#id8" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id9">
+<a class="reference internal image-reference" href="_images/step_1(1).png"><img alt="A beautiful landscape with mountains and a lake" src="_images/step_1%281%29.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Alternative view of the Bottom Panel.</span><a class="headerlink" href="#id9" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="step-2">
+<h3>Step 2<a class="headerlink" href="#step-2" title="Link to this heading"></a></h3>
+<p>It’s time to place the electronic hardware onto the bottom panel.
+The below pictures illustrate what parts go where. Note that I was
+unable to render the components of the motherboards, power supply and
+line filter, please refer to the <a class="reference internal" href="#fully-assembled-enclosure">Fully Assembled Enclosure</a>
+image to see what it should look like when the components are placed
+properly.</p>
+<div class="line-block">
+<div class="line">After Step 1 is complete:</div>
+<div class="line">- Clip the pins of EVERY through-hole component on motherboard and DSUB converter boards without compromising any electrical connections. Note that it is highly suggested to put a 0.2mm thick electrically insulating adhesive pad under every PCB.</div>
+<div class="line">- Place motherboards, <a class="reference internal" href="#dsub-converter">DSUB Converter</a>, bus bars, power supply and line filter.</div>
+<div class="line">- Secure every item down with an M3 locknut, except for the bus bars which requires a 94868A038 (M4x6mm female-female) standoff.</div>
+</div>
+<figure class="align-center" id="id10">
+<a class="reference internal image-reference" href="_images/step_2.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/step_2.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Electronic hardware installation on the bottom panel.</span><a class="headerlink" href="#id10" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id11">
+<a class="reference internal image-reference" href="_images/step_2(2).png"><img alt="A beautiful landscape with mountains and a lake" src="_images/step_2%282%29.png" style="width: 100%;" /></a>
+<figcaption>
+<p><span class="caption-text">Alternative view of electronic hardware installation on the bottom panel.</span><a class="headerlink" href="#id11" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="step-3">
+<h3>Step 3<a class="headerlink" href="#step-3" title="Link to this heading"></a></h3>
+<p>Next, we’ll secure the Aluminum corner extrusions (G123020_1000)
+to the bottom panel. Note that the below pictures do not have the
+electronic hardware installed, this is just for visual clarity of
+the current step. See the <a class="reference internal" href="#bottom-panel">Bottom Panel</a> section for a note on how
+to have the system lay flat on a surface.</p>
+<div class="line-block">
+<div class="line">To secure the corner extrusions to the bottom panel:</div>
+<div class="line">- Double check that every electrical component is secured to the bottom panel, because you will turning the assembly on it’s side or upside-down for the next steps.</div>
+<div class="line">- Place 10 M3x4mm screws into the unthreaded M3 holes from the bottom (flat side).</div>
+<div class="line">- From the top, screw the square M3 nuts onto the M3x4mm screws but only for 1-2 threads. Take care to ensure that the nuts are threaded the same amount on every screw.</div>
+<div class="line">- Gently place the assembly upside-down, such that the M3x4mm screws lay flush with the back of the bottom panel.</div>
+<div class="line">- Slide the corner extrusion onto the 5 M3 square nuts</div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api.html" class="btn btn-neutral float-left" title="API Reference" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, CustomDI.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
