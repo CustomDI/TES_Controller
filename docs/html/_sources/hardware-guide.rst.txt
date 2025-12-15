@@ -1,11 +1,15 @@
 Hardware Guide
 ==============
 
-This guide shows and describes the PCBs in the TES Bias System, 
-as well as a guide on how to assemble the enclosure.
+This guide outlines the PCBs, hardware, and assembly of the 
+TES Bias System. The production files for the enclosure can be 
+found in the `route directory <https://github.com/CustomDI/TES_Controller>`__.
+
+Printed Circuit Boards (PCBs)
+-----------------------------
 
 LNA Bias Card
--------------
+~~~~~~~~~~~~~
 Note that both bias cards are reversible. They can be placed in a card slot in either direction.
 The LNA Bias card is capable of providing a positive voltage rail (0 to 4.95V)
 for the drain of an LNA and negative voltage rail (-4.95 to 0V) for the gate of an LNA.
@@ -26,11 +30,9 @@ This is sufficient for both the 4K and 50K LNAs.
     LNA Bias Card Side 2.
 
 TES Bias Card
--------------
-The TES Bias Card is a 20 bit programmable resistor/voltage divider. 
-Side 1 has an array of relays that allow the user to control which resistors 
-are included in this programmable voltage divider. 
-This provides current steps of 20nA and voltage steps of 
+~~~~~~~~~~~~~
+The TES Bias Card is a 20 bit programmable resistor/voltage divider 
+that provides current steps of 20nA.
 
 .. figure:: /_static/hardware-pictures/TES_Bias_Card_side_1.png
     :alt: A beautiful landscape with mountains and a lake
@@ -47,7 +49,7 @@ This provides current steps of 20nA and voltage steps of
     TES Bias Card Side 2.
 
 DSUB Converter
---------------
+~~~~~~~~~~~~~~
 
 .. figure:: /_static/hardware-pictures/dsub_converter.png
     :alt: A beautiful landscape with mountains and a lake
@@ -62,7 +64,7 @@ Enclosure
 This section details how to assemble the enclosure, including the electronics within.
 It's important to note that many of these pictures show a mounting plate sitting atop the 
 bottom panel - the mounting plate is NOT in the final design. The 
-`production files <put link here>`__ will include bottom panel files only, no mounting plate.
+production files will include bottom panel files only, no mounting plate.
 
 Panel 1
 ~~~~~~~~~~~~
@@ -171,5 +173,5 @@ to have the system lay flat on a surface.
 | - Place 10 M3x4mm screws into the unthreaded M3 holes from the bottom (flat side).
 | - From the top, screw the square M3 nuts onto the M3x4mm screws but only for 1-2 threads. Take care to ensure that the nuts are threaded the same amount on every screw.
 | - Gently place the assembly upside-down, such that the M3x4mm screws lay flush with the back of the bottom panel.
-| - Slide the corner extrusion onto the 5 M3 square nuts
+| - Slide the corner extrusion onto the 5 M3 square nuts.
  

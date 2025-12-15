@@ -127,9 +127,12 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Hardware Guide</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#lna-bias-card">LNA Bias Card</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#tes-bias-card">TES Bias Card</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#dsub-converter">DSUB Converter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#printed-circuit-boards-pcbs">Printed Circuit Boards (PCBs)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#lna-bias-card">LNA Bias Card</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tes-bias-card">TES Bias Card</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#dsub-converter">DSUB Converter</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#enclosure">Enclosure</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#panel-1">Panel 1</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#panel-2">Panel 2</a></li>
@@ -170,10 +173,13 @@
              
   <section id="hardware-guide">
 <h1>Hardware Guide<a class="headerlink" href="#hardware-guide" title="Link to this heading"></a></h1>
-<p>This guide shows and describes the PCBs in the TES Bias System,
-as well as a guide on how to assemble the enclosure.</p>
+<p>This guide outlines the PCBs, hardware, and assembly of the
+TES Bias System. The production files for the enclosure can be
+found in the <a class="reference external" href="https://github.com/CustomDI/TES_Controller">route directory</a>.</p>
+<section id="printed-circuit-boards-pcbs">
+<h2>Printed Circuit Boards (PCBs)<a class="headerlink" href="#printed-circuit-boards-pcbs" title="Link to this heading"></a></h2>
 <section id="lna-bias-card">
-<h2>LNA Bias Card<a class="headerlink" href="#lna-bias-card" title="Link to this heading"></a></h2>
+<h3>LNA Bias Card<a class="headerlink" href="#lna-bias-card" title="Link to this heading"></a></h3>
 <p>Note that both bias cards are reversible. They can be placed in a card slot in either direction.
 The LNA Bias card is capable of providing a positive voltage rail (0 to 4.95V)
 for the drain of an LNA and negative voltage rail (-4.95 to 0V) for the gate of an LNA.
@@ -192,11 +198,9 @@ This is sufficient for both the 4K and 50K LNAs.</p>
 </figure>
 </section>
 <section id="tes-bias-card">
-<h2>TES Bias Card<a class="headerlink" href="#tes-bias-card" title="Link to this heading"></a></h2>
-<p>The TES Bias Card is a 20 bit programmable resistor/voltage divider.
-Side 1 has an array of relays that allow the user to control which resistors
-are included in this programmable voltage divider.
-This provides current steps of 20nA and voltage steps of</p>
+<h3>TES Bias Card<a class="headerlink" href="#tes-bias-card" title="Link to this heading"></a></h3>
+<p>The TES Bias Card is a 20 bit programmable resistor/voltage divider
+that provides current steps of 20nA.</p>
 <figure class="align-center" id="id3">
 <a class="reference internal image-reference" href="_images/TES_Bias_Card_side_1.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/TES_Bias_Card_side_1.png" style="width: 100%;" /></a>
 <figcaption>
@@ -211,7 +215,7 @@ This provides current steps of 20nA and voltage steps of</p>
 </figure>
 </section>
 <section id="dsub-converter">
-<h2>DSUB Converter<a class="headerlink" href="#dsub-converter" title="Link to this heading"></a></h2>
+<h3>DSUB Converter<a class="headerlink" href="#dsub-converter" title="Link to this heading"></a></h3>
 <figure class="align-center" id="id5">
 <a class="reference internal image-reference" href="_images/dsub_converter.png"><img alt="A beautiful landscape with mountains and a lake" src="_images/dsub_converter.png" style="width: 100%;" /></a>
 <figcaption>
@@ -219,12 +223,13 @@ This provides current steps of 20nA and voltage steps of</p>
 </figcaption>
 </figure>
 </section>
+</section>
 <section id="enclosure">
 <h2>Enclosure<a class="headerlink" href="#enclosure" title="Link to this heading"></a></h2>
 <p>This section details how to assemble the enclosure, including the electronics within.
 It’s important to note that many of these pictures show a mounting plate sitting atop the
 bottom panel - the mounting plate is NOT in the final design. The
-<a class="reference external" href="putlinkhere">production files</a> will include bottom panel files only, no mounting plate.</p>
+production files will include bottom panel files only, no mounting plate.</p>
 <section id="panel-1">
 <h3>Panel 1<a class="headerlink" href="#panel-1" title="Link to this heading"></a></h3>
 <figure class="align-center" id="id6">
@@ -321,7 +326,7 @@ to have the system lay flat on a surface.</p>
 <div class="line">- Place 10 M3x4mm screws into the unthreaded M3 holes from the bottom (flat side).</div>
 <div class="line">- From the top, screw the square M3 nuts onto the M3x4mm screws but only for 1-2 threads. Take care to ensure that the nuts are threaded the same amount on every screw.</div>
 <div class="line">- Gently place the assembly upside-down, such that the M3x4mm screws lay flush with the back of the bottom panel.</div>
-<div class="line">- Slide the corner extrusion onto the 5 M3 square nuts</div>
+<div class="line">- Slide the corner extrusion onto the 5 M3 square nuts.</div>
 </div>
 </section>
 </section>
