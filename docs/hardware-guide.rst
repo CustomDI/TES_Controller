@@ -107,7 +107,7 @@ The TES Enclosure BOM lists every component needed to create a TES Bias System.
     :width: 100%
     :align: center
 
-		Top down view of the fully assembled TES Bias System.
+    Top down view of the fully assembled TES Bias System.
 
 Step 1
 ~~~~~~
