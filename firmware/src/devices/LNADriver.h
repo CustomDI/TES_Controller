@@ -4,16 +4,16 @@
 #include <Arduino.h>
 #include "../routers/Router.h"
 #include "../drivers/MCP4728.h"
-#include "../drivers/INA219.h"
+#include "../drivers/INA228.h"
 #include "../drivers/LTC4302.h"
 #include "../helpers/error.h"
 
 // Define I2C addresses for devices behind the LNA LTC4302
 #define LNA_MCP4728_ADDR      0x60 // Address for MCP4728 behind LNA driver
-#define LNA_INA_DRAIN_ADDR    0x40 // Address for INA219_1 behind LNA driver
-#define LNA_INA_GATE_ADDR     0x41 // Address for INA219_2 behind LNA driver
-#define LNA_INA_SHUNT_RESISTANCE_OHMS 5.0f // Shunt resistance for INA219s
-#define LNA_INA_MAX_EXPECTED_CURRENT_AMPS .064f // Max expected current for INA219s
+#define LNA_INA_DRAIN_ADDR    0x40 // Address for INA228_1 behind LNA driver
+#define LNA_INA_GATE_ADDR     0x41 // Address for INA228_2 behind LNA driver
+#define LNA_INA_SHUNT_RESISTANCE_OHMS 5.0f // Shunt resistance for INA228s
+#define LNA_INA_MAX_EXPECTED_CURRENT_AMPS .064f // Max expected current for INA228s
 
 // MCP4728 channels for LNA functions
 #define LNA_DRAIN_CHANNEL MCP4728_CHANNEL_A
@@ -35,7 +35,7 @@ public:
     uint8_t setDrainVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs = 10);
     uint8_t setGateVoltage(float& target_V, uint16_t& dacValue, uint8_t delayMs = 10);
 
-    // Methods to interact with the LNA's INA219s
+    // Methods to interact with the LNA's INA228s
     uint8_t getDrainShuntVoltage_mV(float& shuntVoltage);
     uint8_t getDrainBusVoltage_V(float& busVoltage);
     uint8_t getDrainCurrent_mA(float& current);
@@ -61,8 +61,8 @@ private:
     // The following routes are no longer needed as the LTC4302 does not have channels
 
     MCP4728 _lnaDac;
-    INA219 _lnaInaDrain;
-    INA219 _lnaInaGate;
+    INA228 _lnaInaDrain;
+    INA228 _lnaInaGate;
 
     uint8_t connect();
     uint8_t disconnect();

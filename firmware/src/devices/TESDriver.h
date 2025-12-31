@@ -4,12 +4,15 @@
 #include <Arduino.h>
 #include "../routers/Router.h"
 #include "../drivers/LTC4302.h"
-#include "../drivers/INA219.h"
+#include "../drivers/INA228.h"
 #include "../drivers/TCA642ARGJR.h"
 
 
-#define TES_INA_ADDR    0x40 // Address for INA219 behind TES driver
+#define TES_INA_ADDR    0x40 // Address for INA228 behind TES driver
 #define TES_TCA_ADDR    0x22 // Address for TCA642ARGJR behind TES driver
+
+#define TES_INA_RSHUNT 10 // Default shunt resistance in ohms
+#define TES_INA_MAX_EXPECTED_CURRENT 0.032 // Default max expected current in Amps (32mA)
 
 class TESDriver {
 public:
@@ -50,7 +53,7 @@ private:
 public:
     // Expose low-level drivers for diagnostics (e.g., startup prints in TES_Controller.ino)
     TCA642ARGJR _tca;
-    INA219 _ina;
+    INA228 _ina;
 
     uint8_t connect();
     uint8_t disconnect();
