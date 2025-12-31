@@ -91,7 +91,7 @@ Top-level syntax: `LNA <channel> <GATE|DRAIN> <SUBCOMMAND> [...]`
 | `SETMA` | `LNA <ch> <target> SETMA <current_mA>` | Closed-loop search to achieve the requested current. `current_mA` range: `0` – `64`. | `command: "LNA_SET"`, `channel`, `target`, `current_mA`, `dac_value` |
 | `SETV` | `LNA <ch> <target> SETV <voltage_V>` | Closed-loop search to achieve the requested voltage. Range: `0` – `5` volts. | `command: "LNA_SET"`, `channel`, `target`, `voltage_V`, `dac_value` |
 | `SETDAC` | `LNA <ch> <target> SETDAC <raw>` | Write a raw 12-bit DAC code (0 – 4095). | `command: "LNA_SET"`, `channel`, `target`, `value` |
-| `SHUNT` | `LNA <ch> <target> SHUNT` | Read the INA219 shunt voltage in millivolts. | `command: "LNA_SHUNT"`, `channel`, `target`, `shunt_mV` |
+| `SHUNT` | `LNA <ch> <target> SHUNT` | Read the INA228 shunt voltage in millivolts. | `command: "LNA_SHUNT"`, `channel`, `target`, `shunt_mV` |
 | `BUS` | `LNA <ch> <target> BUS` | Read the bus voltage in volts. | `command: "LNA_BUS"`, `channel`, `target`, `bus_V` |
 | `CURRENT` | `LNA <ch> <target> CURRENT` | Read the calculated current in milliamps. | `command: "LNA_CURRENT"`, `channel`, `target`, `current_mA` |
 | `POWER` | `LNA <ch> <target> POWER` | Read the calculated power in milliwatts. | `command: "LNA_POWER"`, `channel`, `target`, `power_mW` |

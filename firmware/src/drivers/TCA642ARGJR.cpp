@@ -85,19 +85,8 @@ uint8_t TCA642ARGJR::writeRegisters(uint8_t startReg, const uint8_t* data, size_
 }
 
 uint8_t TCA642ARGJR::readRegisters(uint8_t startReg, uint8_t* data, size_t length) {
-    // Optimize by writing the start register once and then requesting all bytes in one read.
-    Wire.beginTransmission(_address);
-    Wire.write(startReg);
-    RETURN_IF_ERROR(Wire.endTransmission(false)); // repeated start
-
-    Wire.requestFrom((uint8_t)_address, (size_t)length);
-    size_t i = 0;
-    while (Wire.available() && i < length) {
-        data[i++] = Wire.read();
-    }
-    if (i != length) {
-        // Short read
-        return 5;
+    for (size_t i = 0; i < length; ++i) {
+        RETURN_IF_ERROR(readRegister(startReg + i, data[i]));
     }
     return 0;
 }

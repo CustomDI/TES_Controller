@@ -17,7 +17,7 @@ uint8_t TESDriver::begin() {
     RETURN_IF_ERROR(_tesLtc4302->begin()); // Call begin on the pointer
     RETURN_IF_ERROR(connect());
     RETURN_IF_ERROR(_tca.begin()); // Initialize TCA642ARGJR
-    RETURN_IF_ERROR(_ina.begin()); // Initialize INA219
+    RETURN_IF_ERROR(_ina.begin(TES_INA_RSHUNT, TES_INA_MAX_EXPECTED_CURRENT)); // Initialize INA219
     return disconnect();
 }
 
