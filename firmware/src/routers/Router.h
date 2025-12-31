@@ -17,7 +17,8 @@ public:
     uint8_t begin();
     uint8_t routeTo(I2CRoute* route);
     uint8_t endRoute(I2CRoute* route);
-    void scanDevicesAtEndpoint(I2CRoute* route); // New method to scan devices at the endpoint of a route
+    void scanDevicesAtEndpoint(I2CRoute* route); // Scan devices at the endpoint of a route
+    void scanDevicesAtEndpoint(); // Scan devices at the base point (root) of the router
     LTC4302* get_baseHub() { return _baseHub; }
 private:
     LTC4302* _baseHub;

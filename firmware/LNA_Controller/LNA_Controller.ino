@@ -2,7 +2,7 @@
 
 #include "src/drivers/LTC4302.h"
 #include "src/drivers/MCP4728.h"
-#include "src/drivers/INA219.h" // Include the INA219 header
+#include "src/drivers/INA228.h" // Include the INA228 header
 #include "src/routers/Router.h" // Include the Router header
 #include "src/devices/LNADriver.h" // Include the LNADriver header
 

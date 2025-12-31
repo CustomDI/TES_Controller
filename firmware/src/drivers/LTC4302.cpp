@@ -7,6 +7,7 @@ uint8_t LTC4302::begin() {
     RETURN_IF_ERROR(disableBus()); // Start with bus disabled
     RETURN_IF_ERROR(setGPIO(1, true)); // Set GPIO1 HIGH
     RETURN_IF_ERROR(setGPIO(2, true)); // Set GPIO2 HIGH
+    return 0;
 }
 
 uint8_t LTC4302::readRegister(uint8_t reg, uint8_t& value) {
@@ -84,7 +85,6 @@ uint8_t LTC4302::disableBus() {
     // This needs to be confirmed with the LTC4302 datasheet.
     // For now, let's assume register 0x01 controls the bus enable,
     // and clearing bit 0 disables it.
-    // Serial.println("LTC4302: Disabling bus on address 0x" + String(_i2cAddress, HEX));
     uint8_t regValue; 
     RETURN_IF_ERROR(readRegister(0x01, regValue));
     return writeRegister(regValue & ~(1 << 7)); // Clear bit 7
