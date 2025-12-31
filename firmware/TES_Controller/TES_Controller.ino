@@ -13,15 +13,18 @@
 #define BASE_HUB_MCP4728_ADDR 0x61 // Address for the main MCP4728
 
 // Make TES/LNA counts configurable in one place
-#define NUM_TES 1
-#define NUM_LNA 0
+#define NUM_TES 12
+#define NUM_LNA 2
 
 // Default address lists (easy to edit / override)
 const uint8_t DEFAULT_TES_ADDRESSES[NUM_TES] = {
-    0x6D
+        0x72, 0x62, 0x63, 0x64, 0x65, 0x66,
+        0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C
 };
 
-const uint8_t DEFAULT_LNA_ADDRESSES[NUM_LNA] = {};
+const uint8_t DEFAULT_LNA_ADDRESSES[NUM_LNA] = {
+        0x6D, 0x6E
+};
 
 // Base hub (unchanged)
 LTC4302 baseHub(BASE_HUB_LTC4302_ADDR);
